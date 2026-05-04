@@ -391,10 +391,180 @@
                 padding: 20px;
             }
         }
+
+        /* ── Top Navbar ── */
+        .top-nav {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 36px;
+            background: rgba(6, 9, 27, 0.45);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .nav-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: white;
+            font-weight: 800;
+            font-size: 1.08rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #ff8c3a, #ff6b00);
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 0 16px rgba(255,107,0,0.4);
+            flex-shrink: 0;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-greeting {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            margin-right: 4px;
+        }
+
+        .nav-role-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .nav-role-badge.admin {
+            background: rgba(255,107,0,0.2);
+            color: #ff8c3a;
+            border: 1px solid rgba(255,107,0,0.35);
+        }
+
+        .nav-role-badge.user {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.75);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .btn-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 20px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-decoration: none;
+            line-height: 1;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .btn-nav-ghost {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+
+        .btn-nav-ghost:hover {
+            background: rgba(255,255,255,0.18);
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-nav-orange {
+            background: linear-gradient(135deg, #ff8c3a 0%, #ff6b00 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(255,107,0,0.35);
+        }
+
+        .btn-nav-orange:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(255,107,0,0.45);
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-nav-dark {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.7);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .btn-nav-dark:hover {
+            background: rgba(255,80,80,0.18);
+            color: #ff9090;
+            border-color: rgba(255,80,80,0.25);
+            text-decoration: none;
+        }
+
+        @media (max-width: 600px) {
+            .top-nav {
+                padding: 14px 18px;
+            }
+            .nav-greeting { display: none; }
+            .btn-nav { padding: 8px 14px; font-size: 0.83rem; }
+        }
+
+        /* Offset hero so navbar doesn't overlap content */
+        .hero-banner {
+            position: relative;
+        }
     </style>
 </head>
 <body>
     <section class="hero-banner">
+        {{-- ── Sticky Navbar ── --}}
+        <nav class="top-nav" id="topNav" aria-label="Main navigation">
+            <a href="/" class="nav-brand" id="navBrand">
+                <div class="nav-brand-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 13l1.5-4.5A3 3 0 0 1 7.35 6h9.3a3 3 0 0 1 2.85 2.5L21 13"/>
+                        <path d="M5 16h14"/><path d="M6 16v2a1 1 0 0 0 1 1h1"/>
+                        <path d="M16 19h1a1 1 0 0 0 1-1v-2"/>
+                        <circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/>
+                    </svg>
+                </div>
+                OrangeCrush
+            </a>
+
+            <div class="nav-actions">
+                @auth
+                    <span class="nav-greeting">Hi, {{ Auth::user()->first_name }}</span>
+                    <span class="nav-role-badge">{{ ucfirst(str_replace('_',' ', Auth::user()->getRoleNames()->first() ?? '')) }}</span>
+                    @if(Auth::user()->isAdmin())
+                        <a href="{{ route('admin.dashboard') }}" class="btn-nav btn-nav-ghost" id="navDashboard">Dashboard</a>
+                    @endif
+                    <a href="{{ route('customer.tracking.index') }}" class="btn-nav btn-nav-ghost" id="navMyBookings">My Bookings</a>
+                    <form method="POST" action="/logout" style="margin:0;" id="navLogoutForm">
+                        @csrf
+                        <button type="submit" class="btn-nav btn-nav-dark" id="navLogout">Sign Out</button>
+                    </form>
+                @else
+                    <a href="/login" class="btn-nav btn-nav-ghost" id="navSignIn">Sign In</a>
+                    <a href="/register" class="btn-nav btn-nav-orange" id="navSignUp">Sign Up</a>
+                @endauth
+            </div>
+        </nav>
         <div class="hero-inner">
             <svg class="hero-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 13l1.5-4.5A3 3 0 0 1 7.35 6h9.3a3 3 0 0 1 2.85 2.5L21 13"></path>
@@ -447,59 +617,52 @@
                 @foreach($vehicles as $vehicle)
                     <article
                         class="vehicle-card"
-                        data-name="{{ strtolower($vehicle['name']) }}"
-                        data-brand="{{ strtolower($vehicle['brand']) }}"
-                        data-type="{{ strtolower($vehicle['type']) }}"
-                        data-transmission="{{ strtolower($vehicle['transmission']) }}"
+                        data-name="{{ strtolower($vehicle->name) }}"
+                        data-brand="{{ strtolower($vehicle->brand ?? '') }}"
+                        data-type="{{ strtolower($vehicle->type) }}"
+                        data-transmission="{{ strtolower($vehicle->transmission) }}"
                     >
                         <div class="vehicle-media">
-                            <img src="{{ $vehicle['image'] }}" alt="{{ $vehicle['name'] }}">
-                            <span class="vehicle-pill">{{ $vehicle['type'] }}</span>
+                            <img src="{{ $vehicle->image_url }}" alt="{{ $vehicle->name }}">
+                            <span class="vehicle-pill">{{ $vehicle->type }}</span>
                         </div>
 
                         <div class="vehicle-body">
-                            <h3 class="vehicle-name">{{ $vehicle['name'] }}</h3>
-                            <div class="vehicle-brand">{{ $vehicle['brand'] }}</div>
+                            <h3 class="vehicle-name">{{ $vehicle->name }}</h3>
+                            <div class="vehicle-brand">{{ $vehicle->brand ?? $vehicle->category?->category_name ?? 'Premium Fleet' }}</div>
 
                             <div class="vehicle-specs">
                                 <span class="vehicle-spec">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                         <circle cx="9" cy="7" r="4"></circle>
-                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                     </svg>
-                                    {{ $vehicle['seats'] }} seats
+                                    {{ $vehicle->capacity }} seats
                                 </span>
                                 <span class="vehicle-spec">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M13 2L3 14h7l-1 8 10-12h-7z"></path>
                                     </svg>
-                                    {{ $vehicle['transmission'] }}
+                                    {{ $vehicle->transmission }}
                                 </span>
                                 <span class="vehicle-spec">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M14 3h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2"></path>
-                                        <path d="M12 12v6"></path>
-                                        <path d="M9 15h6"></path>
-                                        <path d="M10 3h4v4h-4z"></path>
                                     </svg>
-                                    {{ $vehicle['fuel'] }}
+                                    {{ $vehicle->fuel }}
                                 </span>
-                            </div>
-
-                            <div class="vehicle-tags">
-                                @foreach($vehicle['features'] as $feature)
-                                    <span class="vehicle-tag">{{ $feature }}</span>
-                                @endforeach
                             </div>
 
                             <div class="vehicle-footer">
                                 <div class="vehicle-price">
-                                    PHP {{ number_format($vehicle['price'], 0) }}
+                                    PHP {{ number_format($vehicle->price_per_day, 0) }}
                                     <small>per day</small>
                                 </div>
-                                <a class="book-btn" href="/reservation?vehicle={{ $vehicle['id'] }}">Book Now</a>
+                                @auth
+                                    <a class="book-btn" href="{{ route('customer.booking.create', ['vehicle' => $vehicle->id]) }}">Book Now</a>
+                                @else
+                                    <a class="book-btn" href="{{ route('login') }}?redirect={{ urlencode(route('customer.booking.create', ['vehicle' => $vehicle->id])) }}">Book Now</a>
+                                @endauth
                             </div>
                         </div>
                     </article>
