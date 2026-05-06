@@ -4,25 +4,25 @@
 <style>
     .booking-wrap{max-width:900px;margin:40px auto;padding:0 20px 60px}
     .booking-wrap h1{font-size:1.6rem;font-weight:900;letter-spacing:-.04em;margin-bottom:4px}
-    .booking-wrap>.sub{color:rgba(240,242,255,.55);margin-bottom:28px}
+    .booking-wrap>.sub{color:var(--muted);margin-bottom:28px}
     .grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:28px}
-    .form-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:28px}
+    .form-card{background:var(--card-bg);border:1px solid var(--line);border-radius:18px;padding:28px}
     .form-card h2{font-size:1.05rem;font-weight:800;margin-bottom:20px}
     .form-group{margin-bottom:16px}
-    .form-label{display:block;font-size:.8rem;font-weight:600;color:rgba(240,242,255,.5);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
-    .form-control{width:100%;height:44px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f0f2ff;font-family:inherit;font-size:.92rem;padding:0 13px;outline:none;transition:border-color .2s}
+    .form-label{display:block;font-size:.8rem;font-weight:600;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+    .form-control{width:100%;height:44px;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;color:var(--text);font-family:inherit;font-size:.92rem;padding:0 13px;outline:none;transition:border-color .2s}
     .form-control:focus{border-color:rgba(255,107,0,.5);box-shadow:0 0 0 3px rgba(255,107,0,.12)}
     .g2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
     .v-summary{background:rgba(255,107,0,.07);border:1px solid rgba(255,107,0,.18);border-radius:16px;padding:20px;position:sticky;top:80px}
     .v-summary img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;margin-bottom:16px}
     .v-sum-name{font-size:1.05rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
-    .v-sum-type{font-size:.85rem;color:rgba(240,242,255,.5);margin-bottom:16px}
-    .price-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.9rem}
+    .v-sum-type{font-size:.85rem;color:var(--text-dim);margin-bottom:16px}
+    .price-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:.9rem}
     .price-row:last-child{border-bottom:none;font-weight:800;font-size:1rem}
     .price-row span:last-child{color:#ff8c3a}
-    .terms-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px;max-height:200px;overflow-y:auto;font-size:.83rem;color:rgba(240,242,255,.6);line-height:1.6;margin-bottom:14px}
-    .terms-box h2,.terms-box h3{color:#f0f2ff;margin-bottom:8px;font-size:1rem}
-    .check-row{display:flex;align-items:flex-start;gap:10px;font-size:.88rem;color:rgba(240,242,255,.7);margin-bottom:20px}
+    .terms-box{background:var(--hover-bg);border:1px solid var(--line);border-radius:12px;padding:16px;max-height:200px;overflow-y:auto;font-size:.83rem;color:var(--muted);line-height:1.6;margin-bottom:14px}
+    .terms-box h2,.terms-box h3{color:var(--text);margin-bottom:8px;font-size:1rem}
+    .check-row{display:flex;align-items:flex-start;gap:10px;font-size:.88rem;color:var(--muted);margin-bottom:20px}
     .check-row input{accent-color:#ff6b00;margin-top:2px;flex-shrink:0}
     .submit-btn{width:100%;height:50px;background:linear-gradient(135deg,#ff8c3a,#ff6b00);border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(255,107,0,.3);transition:filter .2s,transform .2s}
     .submit-btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
@@ -84,7 +84,7 @@
                         @error('return_date')<p class="error-msg">{{ $message }}</p>@enderror
                     </div>
                 </div>
-                <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px 16px;font-size:.88rem;color:rgba(240,242,255,.6)">
+                <div style="background:var(--hover-bg);border-radius:10px;padding:12px 16px;font-size:.88rem;color:var(--muted)">
                     Total: <strong id="totalCalc" style="color:#ff8c3a">—</strong>
                 </div>
             </div>

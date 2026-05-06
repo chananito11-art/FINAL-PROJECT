@@ -12,32 +12,88 @@ use Illuminate\Support\Facades\Auth;
 
 class PaymentVerificationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $payments = Payment::with(['booking.user', 'booking.vehicle'])
-            ->where('status', 'pending')
-            ->latest()
-            ->paginate(15);
+        $tab = $request->query('tab', 'pending');
 
-        return view('admin.payments.index', compact('payments'));
+        $query = Payment::with(['booking.user', 'booking.vehicle'])->latest();
+
+        match ($tab) {
+            'verified' => $query->where('status', 'verified'),
+            'rejected' => $query->where('status', 'rejected'),
+            'all'      => $query,
+            default    => $query->where('status', 'pending'),
+        };
+
+        if ($request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('reference_code', 'like', "%{$search}%")
+                  ->orWhere('gcash_transaction_reference_number', 'like', "%{$search}%")
+                  ->orWhereHas('booking.user', fn($u) =>
+                      $u->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                  )
+                  ->orWhereHas('booking', fn($b) => $b->where('id', $search));
+            });
+        }
+
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $payments = $query->paginate(15)->withQueryString();
+
+        $counts = [
+            'pending'  => Payment::where('status', 'pending')->count(),
+            'verified' => Payment::where('status', 'verified')->count(),
+            'rejected' => Payment::where('status', 'rejected')->count(),
+            'all'      => Payment::count(),
+        ];
+
+        return view('admin.payments.index', compact('payments', 'tab', 'counts'));
+    }
+
+    public function show(Payment $payment)
+    {
+        $payment->load(['booking.user', 'booking.vehicle', 'verifiedBy']);
+        return view('admin.payments.show', compact('payment'));
     }
 
     public function verify(Request $request, Payment $payment)
     {
+        $request->validate([
+            'amount_matched' => ['required', 'boolean'],
+            'admin_notes'    => ['nullable', 'string', 'max:1000'],
+        ]);
+
         $payment->update([
-            'status'      => 'verified',
-            'verified_by' => Auth::id(),
-            'verified_at' => now(),
+            'status'              => 'verified',
+            'verified_by'         => Auth::id(),
+            'verified_at'         => now(),
+            'amount_matched'      => $request->amount_matched,
+            'admin_payment_notes' => $request->admin_notes,
         ]);
 
         $payment->booking->update(['status' => Booking::STATUS_CONFIRMED]);
         $payment->booking->vehicle->update(['status' => 'rented']);
 
-        ActivityLog::log("Payment verified for booking #{$payment->booking_id}", Payment::class, $payment->id);
+        ActivityLog::log(
+            "Payment verified for booking #{$payment->booking_id}",
+            Payment::class,
+            $payment->id
+        );
 
-        try { $payment->booking->user->notify(new PaymentVerified($payment->booking)); } catch (\Exception) {}
+        try {
+            $payment->booking->user->notify(new PaymentVerified($payment->booking));
+        } catch (\Exception) {}
 
-        return back()->with('success', 'Payment verified and booking confirmed.');
+        return redirect()->route('admin.payments.index')
+            ->with('success', 'Payment verified and booking confirmed.');
     }
 
     public function reject(Request $request, Payment $payment)
@@ -52,8 +108,68 @@ class PaymentVerificationController extends Controller
         ]);
 
         $payment->booking->update(['status' => Booking::STATUS_PENDING_PAYMENT]);
-        ActivityLog::log("Payment rejected for booking #{$payment->booking_id}", Payment::class, $payment->id);
 
-        return back()->with('success', 'Payment rejected. Customer may re-submit.');
+        ActivityLog::log(
+            "Payment rejected for booking #{$payment->booking_id}: {$request->rejection_reason}",
+            Payment::class,
+            $payment->id
+        );
+
+        return redirect()->route('admin.payments.index')
+            ->with('success', 'Payment rejected. Customer may re-submit.');
+    }
+
+    public function history(Request $request)
+    {
+        $query = Payment::with(['booking.user', 'booking.vehicle'])
+            ->whereIn('status', ['verified', 'rejected'])
+            ->latest('verified_at');
+
+        if ($request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('reference_code', 'like', "%{$search}%")
+                  ->orWhere('gcash_transaction_reference_number', 'like', "%{$search}%")
+                  ->orWhereHas('booking.user', fn($u) =>
+                      $u->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name',  'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                  );
+            });
+        }
+
+        if ($request->date_from) {
+            $query->whereDate('verified_at', '>=', $request->date_from);
+        }
+        if ($request->date_to) {
+            $query->whereDate('verified_at', '<=', $request->date_to);
+        }
+
+        $payments = $query->paginate(20)->withQueryString();
+
+        return view('admin.payments.history', compact('payments'));
+    }
+
+    public function recordRefund(Request $request, Payment $payment)
+    {
+        $request->validate([
+            'refund_gcash_reference' => ['required', 'string', 'max:100'],
+            'refund_notes'           => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $payment->update([
+            'refund_issued'          => true,
+            'refund_issued_at'       => now(),
+            'refund_gcash_reference' => $request->refund_gcash_reference,
+            'refund_notes'           => $request->refund_notes,
+        ]);
+
+        ActivityLog::log(
+            "Refund recorded for payment #{$payment->id} (booking #{$payment->booking_id})",
+            Payment::class,
+            $payment->id
+        );
+
+        return back()->with('success', 'Refund recorded successfully.');
     }
 }

@@ -6,7 +6,7 @@
     <button onclick="document.getElementById('addModal').style.display='flex'" class="btn btn-primary">+ Add Vehicle</button>
 </div>
 <div class="card">
-    <div class="card-header"><span class="card-title">All Vehicles</span><span style="font-size:.85rem;color:rgba(240,242,255,.45)">{{ $vehicles->total() }} total</span></div>
+    <div class="card-header"><span class="card-title">All Vehicles</span><span style="font-size:.85rem;color:var(--text-dim)">{{ $vehicles->total() }} total</span></div>
     <div class="tw">
         <table>
             <thead><tr><th>Vehicle</th><th>Type</th><th>Brand</th><th>Price/Day</th><th>Status</th><th>Plate</th><th>Actions</th></tr></thead>
@@ -15,13 +15,13 @@
             <tr>
                 <td style="font-weight:600">{{ $v->name }}</td>
                 <td><span class="badge bgy">{{ $v->type }}</span></td>
-                <td style="color:rgba(240,242,255,.6)">{{ $v->brand }}</td>
+                <td style="color:var(--muted)">{{ $v->brand }}</td>
                 <td style="color:#ff8c3a;font-weight:700">₱{{ number_format($v->price_per_day,0) }}</td>
                 <td>
                     @php $sc=['available'=>'bg_','rented'=>'bo','maintenance'=>'by','unavailable'=>'br']; @endphp
                     <span class="badge {{ $sc[$v->status]??'bgy' }}">{{ ucfirst($v->status) }}</span>
                 </td>
-                <td style="font-size:.85rem;color:rgba(240,242,255,.45)">{{ $v->plate_number ?? '—' }}</td>
+                <td style="font-size:.85rem;color:var(--text-dim)">{{ $v->plate_number ?? '—' }}</td>
                 <td>
                     <button onclick='openEdit({{ $v->toJson() }})' class="btn btn-ghost btn-sm">Edit</button>
                     <form method="POST" action="{{ route('admin.vehicles.destroy',$v) }}" style="display:inline" onsubmit="return confirm('Delete this vehicle?')">
@@ -31,20 +31,20 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="7" style="text-align:center;padding:40px;color:rgba(240,242,255,.4)">No vehicles yet.</td></tr>
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-dim)">No vehicles yet.</td></tr>
             @endforelse
             </tbody>
         </table>
     </div>
-    @if($vehicles->hasPages())<div style="padding:16px;border-top:1px solid rgba(255,255,255,.06)">{{ $vehicles->links() }}</div>@endif
+    @if($vehicles->hasPages())<div style="padding:16px;border-top:1px solid var(--line)">{{ $vehicles->links() }}</div>@endif
 </div>
 
 {{-- Add Modal --}}
 <div id="addModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:20px">
-    <div style="background:#0d1128;border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:28px">
+    <div style="background:var(--dark2);border:1px solid var(--line);border-radius:20px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:28px">
         <div style="display:flex;justify-content:space-between;margin-bottom:20px">
             <h2 style="font-size:1.1rem;font-weight:800">Add Vehicle</h2>
-            <button onclick="document.getElementById('addModal').style.display='none'" style="background:none;border:none;cursor:pointer;color:rgba(240,242,255,.5);font-size:1.2rem">✕</button>
+            <button onclick="document.getElementById('addModal').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:1.2rem">✕</button>
         </div>
         <form method="POST" action="{{ route('admin.vehicles.store') }}" enctype="multipart/form-data">
             @csrf
@@ -53,9 +53,7 @@
             <div class="g2"><div class="form-group"><label class="form-label">Model</label><input type="text" name="model" class="form-control"></div>
             <div class="form-group"><label class="form-label">Year</label><input type="number" name="year" class="form-control" min="1990" max="2030"></div></div>
             <div class="g2"><div class="form-group"><label class="form-label">Plate Number</label><input type="text" name="plate_number" class="form-control"></div>
-            <div class="form-group"><label class="form-label">Category</label>
-                <select name="category_id" class="form-control"><option value="">None</option>@foreach($categories as $c)<option value="{{ $c->id }}">{{ $c->category_name }}</option>@endforeach</select>
-            </div></div>
+</div>
             <div class="g2"><div class="form-group"><label class="form-label">Type *</label>
                 <select name="type" class="form-control" required>@foreach(['Sedan','SUV','Pickup Truck','Van','Hatchback','Crossover'] as $t)<option>{{ $t }}</option>@endforeach</select></div>
             <div class="form-group"><label class="form-label">Transmission *</label>
@@ -75,10 +73,10 @@
 
 {{-- Edit Modal --}}
 <div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:20px">
-    <div style="background:#0d1128;border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:28px">
+    <div style="background:var(--dark2);border:1px solid var(--line);border-radius:20px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:28px">
         <div style="display:flex;justify-content:space-between;margin-bottom:20px">
             <h2 style="font-size:1.1rem;font-weight:800">Edit Vehicle</h2>
-            <button onclick="document.getElementById('editModal').style.display='none'" style="background:none;border:none;cursor:pointer;color:rgba(240,242,255,.5);font-size:1.2rem">✕</button>
+            <button onclick="document.getElementById('editModal').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:1.2rem">✕</button>
         </div>
         <form method="POST" id="editForm" enctype="multipart/form-data">
             @csrf @method('PUT')

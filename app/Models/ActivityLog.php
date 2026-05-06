@@ -32,17 +32,14 @@ class ActivityLog extends Model
     public static function log(string $action, ?string $modelType = null, ?int $modelId = null, ?string $details = null): void
     {
         $user = auth()->user();
-        if (!$user || !$user->isAdmin()) {
-            return;
-        }
 
         static::create([
-            'user_id'    => $user->id,
+            'user_id'    => $user?->id,
             'action'     => $action,
             'model_type' => $modelType,
             'model_id'   => $modelId,
-            'ip_address' => request()->ip(),
-            'url'        => request()->fullUrl(),
+            'ip_address' => request() ? request()->ip() : null,
+            'url'        => request() ? request()->fullUrl() : 'console',
             'details'    => $details,
             'created_at' => now(),
         ]);

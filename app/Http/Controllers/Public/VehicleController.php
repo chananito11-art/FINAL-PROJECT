@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\Vehicle;
 use App\Models\Category;
+use Illuminate\Http\JsonResponse;
 
 class VehicleController extends Controller
 {
@@ -24,5 +26,14 @@ class VehicleController extends Controller
     {
         $vehicle = Vehicle::with('category')->findOrFail($id);
         return view('public.vehicles.show', compact('vehicle'));
+    }
+
+    public function availability(Vehicle $vehicle): JsonResponse
+    {
+        $bookedRanges = Booking::where('vehicle_id', $vehicle->id)
+            ->whereIn('status', ['confirmed', 'awaiting_verification', 'ongoing'])
+            ->get(['pickup_date', 'return_date']);
+
+        return response()->json($bookedRanges);
     }
 }

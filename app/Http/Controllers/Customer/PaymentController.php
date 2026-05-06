@@ -26,20 +26,30 @@ class PaymentController extends Controller
             return back()->with('error', 'Payment already submitted for this booking.');
         }
 
+        if ($booking->status === Booking::STATUS_CANCELLED) {
+            return back()->with('error', 'This booking has been cancelled and cannot accept payment.');
+        }
+
         $request->validate([
-            'reference_code' => ['required', 'string', 'max:50'],
-            'screenshot'     => ['required', 'image', 'max:5120'], // 5 MB
+            'reference_code'                     => ['required', 'string', 'max:100'],
+            'gcash_transaction_reference_number'  => ['required', 'string', 'max:50', 'unique:payments,gcash_transaction_reference_number'],
+            'amount_submitted'                    => ['required', 'numeric', 'min:1'],
+            'gcash_account_name'                  => ['nullable', 'string', 'max:100'],
+            'screenshot'                          => ['required', 'image', 'max:5120'],
         ]);
 
         $path = $request->file('screenshot')->store('payments', 'public');
 
         Payment::create([
-            'booking_id'     => $booking->id,
-            'amount'         => $booking->total_amount,
-            'payment_method' => 'gcash',
-            'reference_code' => $request->reference_code,
-            'screenshot_path'=> $path,
-            'status'         => 'pending',
+            'booking_id'                          => $booking->id,
+            'amount'                              => $booking->total_amount,
+            'amount_submitted'                    => $request->amount_submitted,
+            'payment_method'                      => 'gcash',
+            'reference_code'                      => $request->reference_code,
+            'gcash_transaction_reference_number'  => $request->gcash_transaction_reference_number,
+            'gcash_account_name'                  => $request->gcash_account_name,
+            'screenshot_path'                     => $path,
+            'status'                              => 'pending',
         ]);
 
         $booking->update(['status' => Booking::STATUS_AWAITING_VERIFICATION]);

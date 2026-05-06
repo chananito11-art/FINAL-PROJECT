@@ -6,9 +6,9 @@
     @if($terms)
     <div class="card" style="margin-bottom:20px">
         <div class="card-header"><span class="card-title">Current Version</span>
-            <span style="font-size:.8rem;color:rgba(240,242,255,.4)">Last updated {{ $terms->updated_at?->format('M d, Y H:i') }}</span>
+            <span style="font-size:.8rem;color:var(--text-dim)">Last updated {{ $terms->updated_at?->format('M d, Y H:i') }}</span>
         </div>
-        <div class="card-body" style="font-size:.9rem;color:rgba(240,242,255,.7);line-height:1.7">
+        <div class="card-body" style="font-size:.9rem;color:var(--muted);line-height:1.7">
             {!! $terms->content !!}
         </div>
     </div>

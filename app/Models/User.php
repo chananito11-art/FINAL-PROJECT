@@ -17,6 +17,9 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'status',
+        'last_login_at',
+        'created_by',
     ];
 
     protected $hidden = [
@@ -29,6 +32,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
+            'last_login_at'     => 'datetime',
         ];
     }
 
@@ -47,6 +51,26 @@ class User extends Authenticatable
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function createdEmployees()
+    {
+        return $this->hasMany(User::class, 'created_by');
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === 'suspended';
+    }
+
+    public function isInactive(): bool
+    {
+        return $this->status === 'inactive';
     }
 
     // ── Role helpers (convenience wrappers for Spatie) ────────────────────────

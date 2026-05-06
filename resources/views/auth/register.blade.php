@@ -6,19 +6,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        :root{--orange:#ff6b00;--orange-l:#ff8c3a;--og:rgba(255,107,0,.35);--dark:#06091b;--text:#f0f2ff;--muted:rgba(240,242,255,.55);--line:rgba(255,255,255,.08);--t:.25s ease;--card-bg:rgba(255,255,255,.04);--input-bg:rgba(255,255,255,.06);--shadow:rgba(0,0,0,.5);--dark-2:#0d1128;}
-        @media (prefers-color-scheme: light) {
-            :root {
-                --dark: #f3f4f6;
-                --dark-2: #ffffff;
-                --text: #111827;
-                --muted: rgba(17,24,39,0.6);
-                --line: rgba(0,0,0,0.1);
-                --card-bg: #ffffff;
-                --input-bg: #f9fafb;
-                --og: rgba(255,107,0,0.15);
-                --shadow: rgba(0,0,0,0.05);
-            }
+        :root{--orange:#ff6b00;--orange-l:#ff8c3a;--og:rgba(255,107,0,.35);--dark:#06091b;--text:#f0f2ff;--muted:rgba(240,242,255,.55);--line:rgba(255,255,255,.08);--t:.25s ease;--card-bg:rgba(255,255,255,.04);--input-bg:rgba(255,255,255,.06);--shadow:rgba(0,0,0,.5);--dark-2:#0d1128;--placeholder:rgba(240,242,255,.3);--focus-bg:rgba(255,107,0,.06);}
+        body.light-mode {
+            --dark: #f3f4f6;
+            --dark-2: #ffffff;
+            --text: #111827;
+            --muted: rgba(17,24,39,0.6);
+            --line: rgba(0,0,0,0.1);
+            --card-bg: #ffffff;
+            --input-bg: #f9fafb;
+            --og: rgba(255,107,0,0.15);
+            --shadow: rgba(0,0,0,0.05);
+            --placeholder: rgba(17, 24, 39, 0.4);
+            --focus-bg: #ffffff;
         }
         html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--dark);color:var(--text)}
         .bg{position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(255,107,0,.18) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 100%,rgba(255,107,0,.12) 0%,transparent 55%),linear-gradient(160deg,var(--dark) 0%,var(--dark-2) 50%,var(--dark) 100%);z-index:0}
@@ -44,8 +44,8 @@
         .input-wrap{position:relative}
         .input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
         .form-control{width:100%;height:48px;background:var(--input-bg);border:1px solid var(--line);border-radius:12px;color:var(--text);font-family:inherit;font-size:.95rem;padding:0 14px 0 42px;outline:none;transition:border-color var(--t),box-shadow var(--t)}
-        .form-control::placeholder{color:rgba(240,242,255,.28)}
-        .form-control:focus{border-color:rgba(255,107,0,.6);background:rgba(255,107,0,.06);box-shadow:0 0 0 3px rgba(255,107,0,.15)}
+        .form-control::placeholder{color:var(--placeholder)}
+        .form-control:focus{border-color:rgba(255,107,0,.6);background:var(--focus-bg);box-shadow:0 0 0 3px rgba(255,107,0,.15)}
         .form-control.no-icon{padding-left:14px}
         .error-msg{margin-top:5px;font-size:.8rem;color:#ff8080}
         .alert-error{background:rgba(255,60,60,.12);border:1px solid rgba(255,60,60,.25);border-radius:10px;padding:11px 15px;font-size:.88rem;color:#ff8080;margin-bottom:20px}
@@ -139,6 +139,11 @@
 document.querySelector('form').addEventListener('submit',function(){
     var b=document.getElementById('submitBtn');b.disabled=true;b.textContent='Creating account…';
 });
+
+// Theme sync
+if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+    document.body.classList.add('light-mode');
+}
 </script>
 </body>
 </html>

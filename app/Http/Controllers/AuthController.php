@@ -29,6 +29,24 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             $user = Auth::user();
+
+            // Block suspended customers
+            if ($user->hasRole('customer') && $user->status === 'suspended') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors(['email' => 'Your account has been suspended. Please contact support.'])->onlyInput('email');
+            }
+
+            // Block inactive employees
+            if ($user->hasAnyRole(['admin', 'super_admin']) && $user->status === 'inactive') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors(['email' => 'Your employee account has been deactivated.'])->onlyInput('email');
+            }
+
+            $user->update(['last_login_at' => now()]);
             ActivityLog::log("User logged in: {$user->email}", User::class, $user->id);
             return $this->redirectByRole($user);
         }

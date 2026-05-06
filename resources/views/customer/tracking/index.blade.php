@@ -4,13 +4,13 @@
 <style>
     .track-wrap{max-width:900px;margin:40px auto;padding:0 20px 80px}
     .track-wrap h1{font-size:1.6rem;font-weight:900;letter-spacing:-.04em;margin-bottom:4px}
-    .track-wrap>.sub{color:rgba(240,242,255,.55);margin-bottom:28px}
-    .booking-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 22px;margin-bottom:14px;display:flex;align-items:center;gap:18px;text-decoration:none;color:inherit;transition:background .2s,border-color .2s}
-    .booking-card:hover{background:rgba(255,255,255,.07);border-color:rgba(255,107,0,.2)}
-    .bc-img{width:80px;height:60px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#0d1128}
+    .track-wrap>.sub{color:var(--muted);margin-bottom:28px}
+    .booking-card{background:var(--card-bg);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:14px;display:flex;align-items:center;gap:18px;text-decoration:none;color:inherit;transition:background .2s,border-color .2s}
+    .booking-card:hover{background:var(--hover-bg);border-color:rgba(255,107,0,.2)}
+    .bc-img{width:80px;height:60px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--dark2)}
     .bc-info{flex:1}
     .bc-name{font-size:.98rem;font-weight:700;margin-bottom:4px}
-    .bc-dates{font-size:.83rem;color:rgba(240,242,255,.5)}
+    .bc-dates{font-size:.83rem;color:var(--text-dim)}
     .bc-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
     .bc-price{font-size:1rem;font-weight:800;color:#ff8c3a}
     .badge{display:inline-flex;padding:4px 11px;border-radius:999px;font-size:.75rem;font-weight:700}
@@ -19,9 +19,9 @@
     .s-confirmed{background:rgba(34,197,94,.15);color:#4ade80}
     .s-rejected{background:rgba(239,68,68,.15);color:#f87171}
     .s-ongoing{background:rgba(255,107,0,.15);color:#ff8c3a}
-    .s-completed{background:rgba(255,255,255,.08);color:rgba(240,242,255,.5)}
+    .s-completed{background:var(--badge-y);color:var(--muted)}
     .s-cancelled{background:rgba(239,68,68,.12);color:#f87171}
-    .empty{text-align:center;padding:80px 20px;color:rgba(240,242,255,.4)}
+    .empty{text-align:center;padding:80px 20px;color:var(--text-dim)}
     .empty a{color:#ff8c3a;text-decoration:none;font-weight:600}
 </style>
 @endpush

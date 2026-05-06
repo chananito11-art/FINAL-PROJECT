@@ -24,16 +24,23 @@ class Booking extends Model
         'terms_agreed_at',
         'rejection_reason',
         'admin_notes',
+        'hold_expires_at',
+        'cancellation_reason',
+        'cancelled_by',
+        'cancelled_at',
     ];
 
     protected $casts = [
-        'pickup_date'    => 'date',
-        'return_date'    => 'date',
-        'total_amount'   => 'decimal:2',
-        'terms_agreed_at'=> 'datetime',
+        'pickup_date'     => 'date',
+        'return_date'     => 'date',
+        'total_amount'    => 'decimal:2',
+        'terms_agreed_at' => 'datetime',
+        'hold_expires_at' => 'datetime',
+        'cancelled_at'    => 'datetime',
     ];
 
     // ── Status constants ──────────────────────────────────────────────────────
+    const STATUS_AWAITING_APPROVAL    = 'awaiting_approval';
     const STATUS_PENDING_PAYMENT      = 'pending_payment';
     const STATUS_AWAITING_VERIFICATION = 'awaiting_verification';
     const STATUS_CONFIRMED             = 'confirmed';
@@ -63,6 +70,16 @@ class Booking extends Model
         return $this->hasMany(VehicleRequirement::class);
     }
 
+    public function cancelledBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'cancelled_by');
+    }
+
+    public function isHoldExpired(): bool
+    {
+        return $this->hold_expires_at && $this->hold_expires_at->isPast();
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
     public function getDurationInDaysAttribute(): int
     {
@@ -72,6 +89,7 @@ class Booking extends Model
     public function getStatusBadgeAttribute(): array
     {
         return match($this->status) {
+            'awaiting_approval'     => ['label' => 'Awaiting Approval',      'color' => 'blue'],
             'pending_payment'       => ['label' => 'Pending Payment',       'color' => 'yellow'],
             'awaiting_verification' => ['label' => 'Awaiting Verification', 'color' => 'blue'],
             'confirmed'             => ['label' => 'Confirmed',             'color' => 'green'],

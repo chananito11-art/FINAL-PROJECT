@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Carbon\Carbon;
 
 class Vehicle extends Model
 {
@@ -53,6 +54,26 @@ class Vehicle extends Model
     public function isAvailable(): bool
     {
         return $this->status === 'available';
+    }
+
+    /**
+     * Check if a vehicle is available for a given date range.
+     * Excludes the given booking ID (useful for editing bookings).
+     */
+    public static function isAvailableForDates(int $vehicleId, Carbon $pickup, Carbon $return, ?int $excludeBookingId = null): bool
+    {
+        return !\App\Models\Booking::where('vehicle_id', $vehicleId)
+            ->whereIn('status', ['confirmed', 'awaiting_verification', 'ongoing'])
+            ->where(function ($q) use ($pickup, $return) {
+                $q->whereBetween('pickup_date', [$pickup, $return])
+                  ->orWhereBetween('return_date', [$pickup, $return])
+                  ->orWhere(function ($q2) use ($pickup, $return) {
+                      $q2->where('pickup_date', '<=', $pickup)
+                         ->where('return_date', '>=', $return);
+                  });
+            })
+            ->when($excludeBookingId, fn($q) => $q->where('id', '!=', $excludeBookingId))
+            ->exists();
     }
 
     public function getImageUrlAttribute(): string

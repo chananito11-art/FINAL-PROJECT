@@ -4,28 +4,28 @@
 @push('styles')
 <style>
     .v-detail{display:grid;grid-template-columns:1.2fr 1fr;gap:32px;padding:48px 0}
-    .v-img-wrap{border-radius:20px;overflow:hidden;aspect-ratio:16/10;background:#0d1128}
+    .v-img-wrap{border-radius:20px;overflow:hidden;aspect-ratio:16/10;background:var(--dark2)}
     .v-img-wrap img{width:100%;height:100%;object-fit:cover}
     .v-info{display:flex;flex-direction:column;gap:20px}
     .v-badge{display:inline-flex;padding:5px 12px;border-radius:999px;font-size:.8rem;font-weight:700;background:rgba(255,107,0,.15);color:#ff8c3a;width:fit-content}
     .v-title{font-size:2rem;font-weight:900;letter-spacing:-.04em;line-height:1.1}
-    .v-brand-row{color:rgba(240,242,255,.55);font-size:.95rem}
+    .v-brand-row{color:var(--muted);font-size:.95rem}
     .specs-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .spec-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;display:flex;align-items:center;gap:10px}
-    .spec-label{font-size:.75rem;color:rgba(240,242,255,.45);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+    .spec-item{background:var(--card-bg);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;align-items:center;gap:10px}
+    .spec-label{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
     .spec-val{font-size:.95rem;font-weight:700}
     .price-box{background:rgba(255,107,0,.08);border:1px solid rgba(255,107,0,.2);border-radius:14px;padding:20px}
-    .price-label{font-size:.8rem;color:rgba(240,242,255,.55);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+    .price-label{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
     .price-val{font-size:2.2rem;font-weight:900;letter-spacing:-.04em;color:#ff8c3a}
-    .price-per{font-size:.88rem;color:rgba(240,242,255,.55)}
+    .price-per{font-size:.88rem;color:var(--muted)}
     .book-btn{display:block;width:100%;height:52px;background:linear-gradient(135deg,#ff8c3a,#ff6b00);border:none;border-radius:14px;color:#fff;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(255,107,0,.3);transition:filter .2s,transform .2s}
     .book-btn:hover{filter:brightness(1.1);transform:translateY(-2px)}
-    .desc{color:rgba(240,242,255,.7);line-height:1.7;font-size:.95rem}
+    .desc{color:var(--muted);line-height:1.7;font-size:.95rem}
     @media(max-width:800px){.v-detail{grid-template-columns:1fr}}
 </style>
 @endpush
 <div class="container">
-    <div style="padding:20px 0 4px"><a href="{{ route('vehicles.index') }}" style="color:rgba(240,242,255,.5);text-decoration:none;font-size:.9rem">← Back to vehicles</a></div>
+    <div style="padding:20px 0 4px"><a href="{{ route('vehicles.index') }}" style="color:var(--muted);text-decoration:none;font-size:.9rem">← Back to vehicles</a></div>
     <div class="v-detail">
         <div>
             <div class="v-img-wrap"><img src="{{ $vehicle->image_url }}" alt="{{ $vehicle->name }}"></div>

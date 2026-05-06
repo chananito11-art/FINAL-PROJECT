@@ -33,21 +33,23 @@
             --input-bg:    rgba(255, 255, 255, 0.06);
             --grid-color:  rgba(255, 255, 255, 0.045);
             --shadow:      rgba(0, 0, 0, 0.5);
+            --placeholder: rgba(240, 242, 255, 0.3);
+            --focus-bg:    rgba(255, 107, 0, 0.06);
         }
 
-        @media (prefers-color-scheme: light) {
-            :root {
-                --dark:        #f3f4f6;
-                --dark-2:      #ffffff;
-                --text:        #111827;
-                --text-muted:  rgba(17, 24, 39, 0.6);
-                --line:        rgba(0, 0, 0, 0.1);
-                --card-bg:     #ffffff;
-                --input-bg:    #f9fafb;
-                --grid-color:  rgba(0, 0, 0, 0.045);
-                --orange-glow: rgba(255, 107, 0, 0.15);
-                --shadow:      rgba(0, 0, 0, 0.05);
-            }
+        body.light-mode {
+            --dark:        #f3f4f6;
+            --dark-2:      #ffffff;
+            --text:        #111827;
+            --text-muted:  rgba(17, 24, 39, 0.6);
+            --line:        rgba(0, 0, 0, 0.1);
+            --card-bg:     #ffffff;
+            --input-bg:    #ffffff;
+            --grid-color:  rgba(0, 0, 0, 0.045);
+            --orange-glow: rgba(255, 107, 0, 0.15);
+            --shadow:      rgba(0, 0, 0, 0.05);
+            --placeholder: rgba(17, 24, 39, 0.4);
+            --focus-bg:    #ffffff;
         }
 
         html, body {
@@ -298,12 +300,12 @@
         }
 
         .form-control::placeholder {
-            color: rgba(240, 242, 255, 0.28);
+            color: var(--placeholder);
         }
 
         .form-control:focus {
             border-color: rgba(255, 107, 0, 0.6);
-            background: rgba(255, 107, 0, 0.06);
+            background: var(--focus-bg);
             box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.15);
         }
 
@@ -699,6 +701,11 @@
         submitBtn.disabled    = true;
         submitBtn.textContent = 'Signing in…';
     });
+
+    // Theme sync
+    if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+        document.body.classList.add('light-mode');
+    }
 </script>
 </body>
 </html>

@@ -6,23 +6,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        :root{--orange:#ff6b00;--orange-l:#ff8c3a;--og:rgba(255,107,0,0.25);--dark:#06091b;--text:#f0f2ff;--muted:rgba(240,242,255,0.55);--line:rgba(255,255,255,0.08);--t:.2s ease;--nav-bg:rgba(6,9,27,.9);--hover-bg:rgba(255,255,255,.07);--ghost-bg:rgba(255,255,255,.07);--ghost-hover:rgba(255,255,255,.12);--green:#4ade80;--red:#f87171;}
-        @media (prefers-color-scheme: light) {
-            :root {
-                --dark: #f9fafb;
-                --text: #111827;
-                --muted: rgba(17,24,39,0.6);
-                --line: rgba(0,0,0,0.1);
-                --nav-bg: rgba(255,255,255,.9);
-                --hover-bg: rgba(0,0,0,0.05);
-                --ghost-bg: #f3f4f6;
-                --ghost-hover: #e5e7eb;
-                --og: rgba(255,107,0,0.15);
-                --green:#16a34a;
-                --red:#dc2626;
-            }
+        :root{color-scheme:dark;--orange:#ff6b00;--orange-l:#ff8c3a;--og:rgba(255,107,0,0.25);--dark:#06091b;--text:#f0f2ff;--muted:rgba(240,242,255,0.55);--text-dim:rgba(240,242,255,0.45);--line:rgba(255,255,255,0.08);--t:.2s ease;--nav-bg:rgba(6,9,27,.9);--hover-bg:rgba(255,255,255,.07);--ghost-bg:rgba(255,255,255,.07);--ghost-hover:rgba(255,255,255,.12);--card-bg:rgba(255,255,255,.04);--input-bg:rgba(255,255,255,.07);--green:#4ade80;--red:#f87171;}
+        body.light-mode {
+            color-scheme: light;
+            --dark: #f9fafb;
+            --text: #111827;
+            --muted: rgba(17,24,39,0.6);
+            --text-dim: rgba(17,24,39,0.45);
+            --line: rgba(0,0,0,0.1);
+            --nav-bg: rgba(255,255,255,.9);
+            --hover-bg: rgba(0,0,0,0.05);
+            --ghost-bg: #f3f4f6;
+            --ghost-hover: #e5e7eb;
+            --card-bg: #ffffff;
+            --input-bg: #ffffff;
+            --og: rgba(255,107,0,0.15);
+            --green:#16a34a;
+            --red:#dc2626;
         }
-        html,body{font-family:'Inter',system-ui,sans-serif;background:var(--dark);color:var(--text)}
+        html{height:100%}
+        body{min-height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--dark);color:var(--text);margin:0}
         .navbar{display:flex;align-items:center;gap:20px;padding:16px 32px;border-bottom:1px solid var(--line);background:var(--nav-bg);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
         .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
         .nav-icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--orange-l),var(--orange));display:grid;place-items:center;box-shadow:0 0 12px var(--og)}
@@ -60,6 +63,11 @@
         @auth<a href="{{ route('customer.tracking.index') }}" class="nav-link {{ request()->routeIs('customer.tracking.*') ? 'active' : '' }}">My Bookings</a>@endauth
     </div>
     <div class="nav-right">
+        <button id="themeToggle" class="btn btn-ghost btn-sm" title="Toggle Light/Dark Mode" style="padding: 6px 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+        </button>
         @guest
             <a href="{{ route('login') }}" class="btn btn-ghost btn-sm">Sign In</a>
             <a href="{{ route('register') }}" class="btn btn-primary btn-sm">Sign Up</a>
@@ -75,5 +83,23 @@
 <div class="page-content">@yield('content')</div>
 <footer class="footer">© {{ date('Y') }} OrangeCrush Car Rentals. All rights reserved.</footer>
 @stack('scripts')
+<script>
+    const themeBtn = document.getElementById('themeToggle');
+    const body = document.body;
+    
+    // Check for saved theme or system preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        body.classList.add('light-mode');
+    } else if (!savedTheme && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        body.classList.add('light-mode');
+    }
+
+    themeBtn.addEventListener('click', () => {
+        body.classList.toggle('light-mode');
+        const isLight = body.classList.contains('light-mode');
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    });
+</script>
 </body>
 </html>

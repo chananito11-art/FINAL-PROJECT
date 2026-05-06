@@ -5,31 +5,31 @@
     .hero{padding:60px 0 40px;text-align:center}
     .hero h1{font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-.05em;margin-bottom:12px}
     .hero h1 span{background:linear-gradient(90deg,#ff8c3a,#ff6b00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .hero p{color:rgba(240,242,255,.6);font-size:1.05rem}
-    .filters{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 24px;margin:0 0 32px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+    .hero p{color:var(--muted);font-size:1.05rem}
+    .filters{background:var(--card-bg);border:1px solid var(--line);border-radius:16px;padding:20px 24px;margin:0 0 32px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
     .filter-field{position:relative;flex:1;min-width:180px}
-    .filter-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:rgba(240,242,255,.4);pointer-events:none}
-    .filter-control{width:100%;height:42px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f0f2ff;font-family:inherit;font-size:.9rem;padding:0 12px 0 38px;outline:none;transition:border-color .2s}
-    .filter-control:focus{border-color:rgba(255,107,0,.5)}
+    .filter-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text-dim);pointer-events:none}
+    .filter-control{width:100%;height:42px;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;color:var(--text);font-family:inherit;font-size:.9rem;padding:0 12px 0 38px;outline:none;transition:border-color .2s}
+    .filter-control:focus{border-color:var(--orange)}
     select.filter-control{-webkit-appearance:none;cursor:pointer}
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-    .v-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;overflow:hidden;transition:transform .2s,box-shadow .2s}
-    .v-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
-    .v-img{aspect-ratio:16/10;overflow:hidden;position:relative;background:#0d1128}
+    .v-card{background:var(--card-bg);border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:transform .2s,box-shadow .2s}
+    .v-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.15)}
+    .v-img{aspect-ratio:16/10;overflow:hidden;position:relative;background:var(--dark2)}
     .v-img img{width:100%;height:100%;object-fit:cover;display:block}
-    .v-type{position:absolute;top:12px;right:12px;background:#06091b;color:#f0f2ff;padding:6px 11px;border-radius:999px;font-size:.82rem;font-weight:700}
+    .v-type{position:absolute;top:12px;right:12px;background:var(--dark);color:var(--text);padding:6px 11px;border-radius:999px;font-size:.82rem;font-weight:700}
     .v-status{position:absolute;top:12px;left:12px;padding:5px 10px;border-radius:999px;font-size:.75rem;font-weight:700}
     .v-body{padding:20px}
     .v-name{font-size:1rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
-    .v-brand{font-size:.88rem;color:rgba(240,242,255,.55);margin-bottom:14px}
-    .v-specs{display:flex;flex-wrap:wrap;gap:14px;color:rgba(240,242,255,.55);font-size:.85rem;margin-bottom:16px}
+    .v-brand{font-size:.88rem;color:var(--muted);margin-bottom:14px}
+    .v-specs{display:flex;flex-wrap:wrap;gap:14px;color:var(--muted);font-size:.85rem;margin-bottom:16px}
     .v-spec{display:inline-flex;align-items:center;gap:5px}
     .v-footer{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:16px}
     .v-price{font-size:1.2rem;font-weight:900;letter-spacing:-.03em}
-    .v-price small{display:block;font-size:.8rem;font-weight:500;color:rgba(240,242,255,.55);margin-top:1px}
-    .book-btn{background:#06091b;color:#f0f2ff;border-radius:12px;padding:11px 18px;font-size:.88rem;font-weight:700;text-decoration:none;border:none;cursor:pointer;font-family:inherit;transition:background .2s}
-    .book-btn:hover{background:#141932}
-    .empty{text-align:center;padding:80px 20px;color:rgba(240,242,255,.4)}
+    .v-price small{display:block;font-size:.8rem;font-weight:500;color:var(--muted);margin-top:1px}
+    .book-btn{background:var(--dark2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px 18px;font-size:.88rem;font-weight:700;text-decoration:none;cursor:pointer;font-family:inherit;transition:all .2s}
+    .book-btn:hover{background:var(--hover-bg)}
+    .empty{text-align:center;padding:80px 20px;color:var(--text-dim)}
     .hidden{display:none!important}
     @media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:640px){.grid{grid-template-columns:1fr}.filters{flex-direction:column}}
@@ -60,7 +60,7 @@
                 @foreach($categories as $cat)<option value="{{ strtolower($cat->category_name) }}">{{ $cat->category_name }}</option>@endforeach
             </select>
         </div>
-        <span id="countBadge" style="font-size:.88rem;color:rgba(240,242,255,.5);white-space:nowrap">{{ $vehicles->count() }} vehicles</span>
+        <span id="countBadge" style="font-size:.88rem;color:var(--text-dim);white-space:nowrap">{{ $vehicles->count() }} vehicles</span>
     </div>
     <div class="grid" id="vehicleGrid">
         @forelse($vehicles as $vehicle)
