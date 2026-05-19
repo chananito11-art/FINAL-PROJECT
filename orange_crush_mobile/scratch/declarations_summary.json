@@ -1,0 +1,86 @@
+[
+  {
+    "name": "unknown_0",
+    "preview": "import 'dart:io'; import 'package:flutter/material.dart'; import 'package:image_picker/image_picker."
+  },
+  {
+    "name": "MyApp",
+    "preview": "class MyApp extends StatelessWidget {   const MyApp({super.key});    @override   Widget build(BuildC"
+  },
+  {
+    "name": "unknown_2",
+    "preview": "// ── CUSTOMER PROFILE STATE ── class UserProfile {   String firstName = '';   String lastName = '';"
+  },
+  {
+    "name": "unknown_3",
+    "preview": "// ── GLOBAL STATE ── UserProfile sessionUser = UserProfile(); List<Booking> userBookings = [];  // "
+  },
+  {
+    "name": "_LoginScreenState",
+    "preview": "class _LoginScreenState extends State<LoginScreen> {   final _emailController = TextEditingControlle"
+  },
+  {
+    "name": "unknown_5",
+    "preview": "// ───────────────────────────────────────────────────────────────────────────── // 📱 2. MAIN BOTTO"
+  },
+  {
+    "name": "_MainNavigationScreenState",
+    "preview": "class _MainNavigationScreenState extends State<MainNavigationScreen> {   int _currentIndex = 0;    f"
+  },
+  {
+    "name": "unknown_7",
+    "preview": "// ───────────────────────────────────────────────────────────────────────────── // 📱 2.1 DASHBOARD"
+  },
+  {
+    "name": "_DashboardTabScreenState",
+    "preview": "class _DashboardTabScreenState extends State<DashboardTabScreen> {   Map<String, dynamic>? _dashboar"
+  },
+  {
+    "name": "unknown_9",
+    "preview": "// ───────────────────────────────────────────────────────────────────────────── // 📱 2.2 PAYMENTS/"
+  },
+  {
+    "name": "_TransactionsTabScreenState",
+    "preview": "class _TransactionsTabScreenState extends State<TransactionsTabScreen> {   List<Map<String, dynamic>"
+  },
+  {
+    "name": "unknown_11",
+    "preview": "// ───────────────────────────────────────────────────────────────────────────── // 📱 3. FLEET CATA"
+  },
+  {
+    "name": "_FleetCatalogScreenState",
+    "preview": "class _FleetCatalogScreenState extends State<FleetCatalogScreen> {   List<Vehicle> _vehicles = [];  "
+  },
+  {
+    "name": "unknown_13",
+    "preview": "// ───────────────────────────────────────────────────────────────────────────── // 📱 4. VEHICLE DE"
+  },
+  {
+    "name": "_VehicleDetailScreenState",
+    "preview": "class _VehicleDetailScreenState extends State<VehicleDetailScreen> {   DateTime? _pickupDate;   Date"
+  },
+  {
+    "name": "unknown_15",
+    "preview": "// ───────────────────────────────────────────────────────────────────────────── // 📱 5. RENTALS DA"
+  },
+  {
+    "name": "_RentalsDashboardScreenState",
+    "preview": "class _RentalsDashboardScreenState extends State<RentalsDashboardScreen> {   bool _isLoading = false"
+  },
+  {
+    "name": "unknown_17",
+    "preview": "// ───────────────────────────────────────────────────────────────────────────── // 📱 6. LIVE MILES"
+  },
+  {
+    "name": "_TrackingMilestoneScreenState",
+    "preview": "class _TrackingMilestoneScreenState extends State<TrackingMilestoneScreen> {   final _amountControll"
+  },
+  {
+    "name": "unknown_19",
+    "preview": "// ───────────────────────────────────────────────────────────────────────────── // 📱 7. PROFILE & "
+  },
+  {
+    "name": "_ProfileScreenState",
+    "preview": "class _ProfileScreenState extends State<ProfileScreen> {   final _licController = TextEditingControl"
+  }
+]

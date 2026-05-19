@@ -46,7 +46,9 @@
                 <div class="info-row"><span>Pickup</span><strong>{{ $payment->booking?->pickup_date?->format('M d, Y') }}</strong></div>
                 <div class="info-row"><span>Return</span><strong>{{ $payment->booking?->return_date?->format('M d, Y') }}</strong></div>
                 <div class="info-row"><span>Duration</span><strong>{{ $payment->booking?->duration_in_days }} day(s)</strong></div>
-                <div class="info-row"><span>Total Expected</span><strong style="color:var(--orange-l);font-size:1.05rem">₱{{ number_format($payment->booking?->total_amount,0) }}</strong></div>
+                <div class="info-row" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)"><span>Total Cost</span><strong>₱{{ number_format($payment->booking?->total_amount,0) }}</strong></div>
+                <div class="info-row"><span>Already Paid</span><strong style="color:var(--green)">₱{{ number_format($payment->booking?->paid_amount,0) }}</strong></div>
+                <div class="info-row"><span>Remaining Balance</span><strong style="color:var(--orange-l);font-size:1.05rem">₱{{ number_format($payment->booking?->balance_amount,0) }}</strong></div>
             </div>
         </div>
 
@@ -68,18 +70,23 @@
                 <p style="font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">GCash Transaction Reference Number</p>
                 <div class="gcash-ref">{{ $payment->gcash_transaction_reference_number ?? '—' }}</div>
 
-                <div class="info-row"><span>Amount Expected</span><strong style="color:var(--orange-l)">₱{{ number_format($payment->booking?->total_amount,0) }}</strong></div>
+                <div class="info-row"><span>Remaining Balance</span><strong style="color:var(--orange-l)">₱{{ number_format($payment->booking?->balance_amount,0) }}</strong></div>
                 <div class="info-row"><span>Amount Submitted</span>
-                    <strong style="color:{{ ($payment->amount_submitted == $payment->booking?->total_amount) ? '#4ade80' : '#f87171' }}">
-                        ₱{{ number_format($payment->amount_submitted ?? 0,0) }}
-                    </strong>
+                    <strong>₱{{ number_format($payment->amount_submitted ?? 0,0) }}</strong>
                 </div>
 
-                @php $diff = abs(($payment->amount_submitted ?? 0) - ($payment->booking?->total_amount ?? 0)); @endphp
-                @if($payment->amount_submitted && $diff > 1)
-                <div class="mismatch">⚠️ Amount mismatch: customer submitted ₱{{ number_format($payment->amount_submitted,0) }}, expected ₱{{ number_format($payment->booking?->total_amount,0) }} (diff: ₱{{ number_format($diff,0) }})</div>
-                @elseif($payment->amount_submitted)
-                <div class="match">✓ Amount matches expected total</div>
+                @php 
+                    $submitted = $payment->amount_submitted ?? 0;
+                    $balance = $payment->booking?->balance_amount ?? 0;
+                    $isFull = $submitted >= $balance;
+                @endphp
+
+                @if($submitted > 0 && $isFull)
+                <div class="match">✓ Payment covers the full remaining balance.</div>
+                @elseif($submitted > 0)
+                <div class="mismatch" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25);color:#fbbf24">
+                    ⚠️ Partial Payment: Customer submitted ₱{{ number_format($submitted,0) }} towards a balance of ₱{{ number_format($balance,0) }}.
+                </div>
                 @endif
 
                 @if($payment->amount_matched !== null)
@@ -173,15 +180,23 @@
 <div class="modal-overlay" id="verifyModal">
     <div class="modal-box">
         <h3>Verify Payment</h3>
+        @php
+            $submittedAmt  = $payment->amount_submitted ?? 0;
+            $balanceAmt    = $payment->booking?->balance_amount ?? 0;
+            $isFullPayment = $submittedAmt >= $balanceAmt;
+        @endphp
+        <div style="background:var(--hover-bg);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.88rem">
+            @if($isFullPayment)
+            <div style="color:#4ade80;font-weight:700;margin-bottom:4px">✓ Full Payment — clears the balance</div>
+            <div style="color:var(--muted)">Submitted: ₱{{ number_format($submittedAmt,0) }} · Balance was: ₱{{ number_format($balanceAmt,0) }}</div>
+            @else
+            <div style="color:#fbbf24;font-weight:700;margin-bottom:4px">⚡ Partial Payment — balance will remain</div>
+            <div style="color:var(--muted)">Submitted: ₱{{ number_format($submittedAmt,0) }} · Remaining after: ₱{{ number_format(max(0,$balanceAmt-$submittedAmt),0) }}</div>
+            @endif
+        </div>
         <form method="POST" action="{{ route('admin.payments.verify', $payment) }}">
             @csrf
-            <div class="form-group">
-                <label class="form-label">Does amount match?</label>
-                <select name="amount_matched" class="form-control" required>
-                    <option value="1">✓ Yes — amount matches</option>
-                    <option value="0">✕ No — amount mismatch (verify anyway)</option>
-                </select>
-            </div>
+            <input type="hidden" name="amount_matched" value="{{ $isFullPayment ? '1' : '0' }}">
             <div class="form-group">
                 <label class="form-label">Admin Notes (optional)</label>
                 <textarea name="admin_notes" class="form-control" rows="3" placeholder="Internal notes visible to admins only…"></textarea>

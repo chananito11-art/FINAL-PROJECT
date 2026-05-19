@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -9,7 +11,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     protected $fillable = [
         'first_name',
@@ -20,6 +22,9 @@ class User extends Authenticatable
         'status',
         'last_login_at',
         'created_by',
+        'loyalty_points',
+        'verification_status',
+        'id_expiration_date',
     ];
 
     protected $hidden = [
@@ -30,10 +35,24 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'last_login_at'     => 'datetime',
+            'email_verified_at'  => 'datetime',
+            'password'           => 'hashed',
+            'last_login_at'      => 'datetime',
+            'id_expiration_date' => 'date',
+            'loyalty_points'     => 'integer',
         ];
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    public function isVerified(): bool
+    {
+        if ($this->id_expiration_date && $this->id_expiration_date->isPast()) {
+            if ($this->verification_status !== 'expired') {
+                $this->update(['verification_status' => 'expired']);
+            }
+            return false;
+        }
+        return $this->verification_status === 'verified';
     }
 
     // ── Accessors ────────────────────────────────────────────────────────────
@@ -46,6 +65,11 @@ class User extends Authenticatable
     public function bookings()
     {
         return $this->hasMany(Booking::class);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(CustomerDocument::class);
     }
 
     public function activityLogs()

@@ -1,77 +1,186 @@
 @extends('layouts.customer')
 @section('title','Browse Vehicles')
 @push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 <style>
     .hero{padding:60px 0 40px;text-align:center}
     .hero h1{font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-.05em;margin-bottom:12px}
     .hero h1 span{background:linear-gradient(90deg,#ff8c3a,#ff6b00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
     .hero p{color:var(--muted);font-size:1.05rem}
-    .filters{background:var(--card-bg);border:1px solid var(--line);border-radius:16px;padding:20px 24px;margin:0 0 32px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
-    .filter-field{position:relative;flex:1;min-width:180px}
-    .filter-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text-dim);pointer-events:none}
-    .filter-control{width:100%;height:42px;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;color:var(--text);font-family:inherit;font-size:.9rem;padding:0 12px 0 38px;outline:none;transition:border-color .2s}
-    .filter-control:focus{border-color:var(--orange)}
-    select.filter-control{-webkit-appearance:none;cursor:pointer}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-    .v-card{background:var(--card-bg);border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:transform .2s,box-shadow .2s}
-    .v-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.15)}
+    
+    .search-box {
+        background: var(--card-bg);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 32px;
+        margin-bottom: 48px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+        transition: box-shadow .3s, border-color .3s;
+    }
+    .search-box.needs-dates {
+        border-color: rgba(255,107,0,.45);
+        box-shadow: 0 0 0 4px rgba(255,107,0,.1), 0 20px 40px rgba(0,0,0,0.1);
+        animation: pulse-border 2s ease-in-out infinite;
+    }
+    @keyframes pulse-border {
+        0%,100%{box-shadow:0 0 0 4px rgba(255,107,0,.1),0 20px 40px rgba(0,0,0,.1)}
+        50%{box-shadow:0 0 0 8px rgba(255,107,0,.15),0 20px 40px rgba(0,0,0,.1)}
+    }
+    .date-prompt-banner {
+        background: linear-gradient(135deg,rgba(255,107,0,.12),rgba(255,107,0,.06));
+        border: 1px solid rgba(255,107,0,.3);
+        border-radius: 14px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+    .date-prompt-banner .icon{font-size:1.6rem;flex-shrink:0}
+    .date-prompt-banner strong{display:block;font-size:.95rem;color:var(--orange-l)}
+    .date-prompt-banner span{font-size:.83rem;color:var(--muted)}
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        align-items: flex-end;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .filter-group label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+    }
+    .filter-input {
+        background: var(--input-bg);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        height: 48px;
+        padding: 0 16px;
+        color: var(--text);
+        font-family: inherit;
+        font-size: 0.95rem;
+        outline: none;
+        transition: all 0.2s;
+        width: 100%;
+    }
+    .filter-input:focus {
+        border-color: var(--orange);
+        box-shadow: 0 0 0 4px rgba(255,107,0,0.1);
+    }
+    .apply-btn {
+        background: linear-gradient(135deg, var(--orange-l), var(--orange));
+        color: white;
+        border: none;
+        border-radius: 12px;
+        height: 48px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .apply-btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.1);
+    }
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:32px;padding-bottom:60px}
+    .v-card{background:var(--card-bg);border:1px solid var(--line);border-radius:24px;overflow:hidden;transition:transform .2s,box-shadow .2s}
+    .v-card:hover{transform:translateY(-6px);box-shadow:0 24px 48px rgba(0,0,0,.18)}
     .v-img{aspect-ratio:16/10;overflow:hidden;position:relative;background:var(--dark2)}
     .v-img img{width:100%;height:100%;object-fit:cover;display:block}
-    .v-type{position:absolute;top:12px;right:12px;background:var(--dark);color:var(--text);padding:6px 11px;border-radius:999px;font-size:.82rem;font-weight:700}
-    .v-status{position:absolute;top:12px;left:12px;padding:5px 10px;border-radius:999px;font-size:.75rem;font-weight:700}
-    .v-body{padding:20px}
-    .v-name{font-size:1rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+    .v-type{position:absolute;top:14px;right:14px;background:var(--dark);color:var(--text);padding:7px 12px;border-radius:999px;font-size:.82rem;font-weight:700;backdrop-filter:blur(8px);border:1px solid var(--line)}
+    .v-body{padding:24px}
+    .v-name{font-size:1.1rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
     .v-brand{font-size:.88rem;color:var(--muted);margin-bottom:14px}
     .v-specs{display:flex;flex-wrap:wrap;gap:14px;color:var(--muted);font-size:.85rem;margin-bottom:16px}
     .v-spec{display:inline-flex;align-items:center;gap:5px}
-    .v-footer{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:16px}
+    .v-footer{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
     .v-price{font-size:1.2rem;font-weight:900;letter-spacing:-.03em}
     .v-price small{display:block;font-size:.8rem;font-weight:500;color:var(--muted);margin-top:1px}
     .book-btn{background:var(--dark2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px 18px;font-size:.88rem;font-weight:700;text-decoration:none;cursor:pointer;font-family:inherit;transition:all .2s}
     .book-btn:hover{background:var(--hover-bg)}
-    .empty{text-align:center;padding:80px 20px;color:var(--text-dim)}
-    .hidden{display:none!important}
-    @media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:640px){.grid{grid-template-columns:1fr}.filters{flex-direction:column}}
+    .empty{text-align:center;padding:80px 20px;color:var(--text-dim);grid-column:1/-1}
 </style>
 @endpush
 @section('content')
 <div class="container">
     <div class="hero">
         <h1>Browse our <span>Premium Fleet</span></h1>
-        <p>Find the perfect vehicle for your next adventure</p>
+        @if(request()->filled(['pickup_date','return_date']))
+        @php
+            $pickup = \Carbon\Carbon::parse(request('pickup_date'));
+            $ret    = \Carbon\Carbon::parse(request('return_date'));
+            $days   = max(1, $pickup->diffInDays($ret));
+        @endphp
+        <p style="color:#ff8c3a;font-weight:700">
+            ✓ Showing cars available {{ $pickup->format('M d') }} → {{ $ret->format('M d, Y') }} · {{ $days }} day{{ $days !== 1 ? 's' : '' }}
+        </p>
+        @else
+        <p>Choose your dates below to see only available vehicles</p>
+        @endif
     </div>
-    <div class="filters">
-        <div class="filter-field">
-            <svg class="filter-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-            <input class="filter-control" id="search" type="text" placeholder="Search vehicles…">
+
+    <form action="{{ route('vehicles.index') }}" method="GET" class="search-box{{ !request()->filled(['pickup_date','return_date']) ? ' needs-dates' : '' }}" id="vehicleFilterForm">
+        @if(!request()->filled(['pickup_date','return_date']))
+        <div class="date-prompt-banner">
+            <div class="icon">📅</div>
+            <div>
+                <strong>Select your rental dates first</strong>
+                <span>Pick a pickup and return date to see only available vehicles for your trip.</span>
+            </div>
         </div>
-        <div class="filter-field">
-            <svg class="filter-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            <select class="filter-control" id="typeFilter">
-                <option value="">All Types</option>
-                @foreach($vehicles->pluck('type')->unique() as $t)<option value="{{ strtolower($t) }}">{{ $t }}</option>@endforeach
-            </select>
+        @endif
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label>Pickup Date</label>
+                <input type="text" name="pickup_date" id="pickup_date" class="filter-input datepicker" placeholder="Select Date" value="{{ request('pickup_date') }}" autocomplete="off" required>
+            </div>
+            <div class="filter-group">
+                <label>Return Date</label>
+                <input type="text" name="return_date" id="return_date" class="filter-input datepicker" placeholder="Select Date" value="{{ request('return_date') }}" autocomplete="off" required>
+            </div>
+            <div class="filter-group">
+                <label>Vehicle Type</label>
+                <select name="type" class="filter-input">
+                    <option value="">All Types</option>
+                    @foreach(['Sedan','SUV','Pickup Truck','Van','Hatchback','Crossover'] as $type)
+                        <option value="{{ $type }}" {{ request('type') == $type ? 'selected' : '' }}>{{ $type }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Min Capacity</label>
+                <select name="capacity" class="filter-input">
+                    <option value="">Any Capacity</option>
+                    @for($i=2; $i<=10; $i++)
+                        <option value="{{ $i }}" {{ request('capacity') == $i ? 'selected' : '' }}>{{ $i }}+ Seats</option>
+                    @endfor
+                </select>
+            </div>
+            <div class="filter-group">
+                <button type="submit" class="apply-btn">Show Available Cars</button>
+            </div>
         </div>
-        <div class="filter-field">
-            <svg class="filter-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <select class="filter-control" id="brandFilter">
-                <option value="">All Brands</option>
-                @foreach($categories as $cat)<option value="{{ strtolower($cat->category_name) }}">{{ $cat->category_name }}</option>@endforeach
-            </select>
-        </div>
-        <span id="countBadge" style="font-size:.88rem;color:var(--text-dim);white-space:nowrap">{{ $vehicles->count() }} vehicles</span>
-    </div>
+    </form>
+
     <div class="grid" id="vehicleGrid">
         @forelse($vehicles as $vehicle)
-        <article class="v-card" data-name="{{ strtolower($vehicle->name) }}" data-brand="{{ strtolower($vehicle->brand ?? '') }}" data-type="{{ strtolower($vehicle->type) }}">
+        <article class="v-card">
             <div class="v-img">
                 <img src="{{ $vehicle->image_url }}" alt="{{ $vehicle->name }}" loading="lazy">
                 <span class="v-type">{{ $vehicle->type }}</span>
             </div>
             <div class="v-body">
                 <div class="v-name">{{ $vehicle->name }}</div>
-                <div class="v-brand">{{ $vehicle->brand ?? $vehicle->category?->category_name ?? 'Premium Fleet' }}</div>
+                <div class="v-brand">{{ $vehicle->brand ?? 'Premium Fleet' }}</div>
                 <div class="v-specs">
                     <span class="v-spec">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
@@ -87,28 +196,64 @@
                     </span>
                 </div>
                 <div class="v-footer">
-                    <div class="v-price">PHP {{ number_format($vehicle->price_per_day,0) }}<small>per day</small></div>
+                    <div class="v-price">
+                        <small style="margin-bottom:2px; font-weight:700; color:var(--orange-l);">Starts at</small>
+                        PHP {{ number_format($vehicle->price_per_day,0) }}<small>per day</small>
+                    </div>
+                    @php
+                        $bookingUrl = route('customer.booking.create', [
+                            'vehicle' => $vehicle->id,
+                            'pickup' => request('pickup_date'),
+                            'return' => request('return_date')
+                        ]);
+                    @endphp
                     @auth
-                        <a href="{{ route('customer.booking.create', ['vehicle' => $vehicle->id]) }}" class="book-btn">Book Now</a>
+                        <a href="{{ $bookingUrl }}" class="book-btn">Book Now</a>
                     @else
-                        <a href="{{ route('login') }}?redirect={{ urlencode(route('customer.booking.create', ['vehicle' => $vehicle->id])) }}" class="book-btn">Book Now</a>
+                        <a href="{{ route('login') }}?redirect={{ urlencode($bookingUrl) }}" class="book-btn">Book Now</a>
                     @endauth
                 </div>
             </div>
         </article>
         @empty
-        <div class="empty" style="grid-column:1/-1"><p>No vehicles available at the moment.</p></div>
+        <div class="empty">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--line)" stroke-width="1.5" style="margin-bottom: 20px"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            @if(request()->filled(['pickup_date','return_date']))
+            <p>No vehicles available for <strong>{{ request('pickup_date') }}</strong> &rarr; <strong>{{ request('return_date') }}</strong>.</p>
+            <p style="font-size:.88rem; color:var(--muted)">Try different dates or a different vehicle type.</p>
+            <a href="{{ route('vehicles.index') }}" style="color: var(--orange); text-decoration: none; font-weight: 700; margin-top: 12px; display: inline-block">← Change Dates</a>
+            @else
+            <p>No vehicles found. <a href="{{ route('vehicles.index') }}" style="color:var(--orange);text-decoration:none;font-weight:700">Clear filters</a></p>
+            @endif
+        </div>
         @endforelse
     </div>
 </div>
 @endsection
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const s=document.getElementById('search'),tf=document.getElementById('typeFilter'),bf=document.getElementById('brandFilter');
-const cards=[...document.querySelectorAll('.v-card')],cnt=document.getElementById('countBadge');
-function filter(){const q=s.value.toLowerCase(),t=tf.value,b=bf.value;let n=0;
-cards.forEach(c=>{const m=(!q||c.dataset.name.includes(q)||c.dataset.brand.includes(q))&&(!t||c.dataset.type===t)&&(!b||c.dataset.brand===b);c.classList.toggle('hidden',!m);if(m)n++;});
-cnt.textContent=n+' vehicle'+(n!==1?'s':'');}
-s.addEventListener('input',filter);tf.addEventListener('change',filter);bf.addEventListener('change',filter);
+    const hasDates = {{ request()->filled(['pickup_date','return_date']) ? 'true' : 'false' }};
+
+    const fpPickup = flatpickr("#pickup_date", {
+        minDate: "today",
+        dateFormat: "Y-m-d",
+        defaultDate: "{{ request('pickup_date') }}",
+        onChange: function(selectedDates, dateStr) {
+            fpReturn.set('minDate', dateStr);
+        }
+    });
+
+    const fpReturn = flatpickr("#return_date", {
+        minDate: "today",
+        dateFormat: "Y-m-d",
+        defaultDate: "{{ request('return_date') }}",
+    });
+
+    // Auto-open pickup date when arriving without dates
+    if (!hasDates) {
+        setTimeout(() => fpPickup.open(), 600);
+    }
 </script>
 @endpush
+

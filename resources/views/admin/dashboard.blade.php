@@ -10,7 +10,7 @@
 .stat-label{font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 .stat-value{font-size:1.9rem;font-weight:900;letter-spacing:-.04em;line-height:1}
 .stat-sub{font-size:.78rem;color:var(--muted);margin-top:4px}
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:20px;margin-bottom:24px}
 .quick-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
 .qa-btn{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--card-bg);color:var(--text);font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .15s}
 .qa-btn:hover{border-color:rgba(255,107,0,.4);background:rgba(255,107,0,.06)}
@@ -20,6 +20,7 @@
 .activity-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);margin-top:6px;flex-shrink:0}
 .activity-text{font-size:.86rem;line-height:1.5}
 .activity-meta{font-size:.76rem;color:var(--muted);margin-top:2px}
+.chart-container{padding:12px 16px}
 </style>
 @endpush
 @section('content')
@@ -83,14 +84,12 @@
         <div class="stat-label">Available Vehicles</div>
         <div class="stat-value" style="color:var(--green)">{{ $stats['available_vehicles'] }}</div>
     </div>
-    <a href="{{ route('admin.users.index') }}?tab=customers" style="text-decoration:none;color:inherit">
-        <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(168,85,247,.1)">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            </div>
-            <div class="stat-label">Total Customers</div>
-            <div class="stat-value">{{ $stats['total_customers'] }}</div>
+    <a href="{{ route('admin.users.index') }}?tab=customers" class="stat-card" style="text-decoration:none;color:inherit;display:block">
+        <div class="stat-icon" style="background:rgba(168,85,247,.1)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
         </div>
+        <div class="stat-label">Total Customers</div>
+        <div class="stat-value">{{ $stats['total_customers'] }}</div>
     </a>
     <div class="stat-card">
         <div class="stat-icon" style="background:rgba(255,107,0,.1)">
@@ -120,19 +119,19 @@
 <div class="charts-grid">
     <div class="card">
         <div class="card-header"><span class="card-title">Revenue (Last 6 Months)</span></div>
-        <div class="card-body"><canvas id="revenueChart" height="200"></canvas></div>
+        <div class="card-body chart-container"><canvas id="revenueChart" height="280"></canvas></div>
     </div>
     <div class="card">
         <div class="card-header"><span class="card-title">Bookings by Status</span></div>
-        <div class="card-body"><canvas id="bookingChart" height="200"></canvas></div>
+        <div class="card-body chart-container"><canvas id="bookingChart" height="280"></canvas></div>
     </div>
     <div class="card">
         <div class="card-header"><span class="card-title">Top 5 Vehicles</span></div>
-        <div class="card-body"><canvas id="vehicleChart" height="200"></canvas></div>
+        <div class="card-body chart-container"><canvas id="vehicleChart" height="280"></canvas></div>
     </div>
     <div class="card">
         <div class="card-header"><span class="card-title">Booking Activity (30 Days)</span></div>
-        <div class="card-body"><canvas id="timelineChart" height="200"></canvas></div>
+        <div class="card-body chart-container"><canvas id="timelineChart" height="280"></canvas></div>
     </div>
 </div>
 
@@ -164,62 +163,179 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const getChartTheme = () => {
-    const isLight = document.body.classList.contains('light-mode');
-    const color = isLight ? '#111827' : '#f0f2ff';
-    const muted = isLight ? 'rgba(17,24,39,0.6)' : 'rgba(240,242,255,0.55)';
-    const dim = isLight ? 'rgba(17,24,39,0.4)' : 'rgba(240,242,255,0.4)';
-    const grid = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
-    
+// ── Theme tokens ──────────────────────────────────────────────────────────
+const isLight = () => document.body.classList.contains('light-mode');
+const themeTokens = () => ({
+    text:   isLight() ? '#111827' : '#f0f2ff',
+    muted:  isLight() ? 'rgba(17,24,39,0.55)' : 'rgba(240,242,255,0.55)',
+    grid:   isLight() ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.07)',
+    card:   isLight() ? '#ffffff' : '#0d1128',
+});
+
+// Shared plugin defaults
+Chart.defaults.font.family = "'Inter', 'Segoe UI', Arial, sans-serif";
+Chart.defaults.animation = { duration: 800, easing: 'easeInOutQuart' };
+
+function baseOptions(yLabel = '') {
+    const t = themeTokens();
     return {
-        color: color,
-        plugins: { legend: { labels: { color: muted, font: { size: 12 } } } },
+        maintainAspectRatio: false,
+        color: t.text,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: t.card,
+                titleColor: t.text,
+                bodyColor: t.muted,
+                borderColor: 'rgba(255,107,0,.3)',
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 10,
+                callbacks: {
+                    label: ctx => {
+                        const v = ctx.parsed.y ?? ctx.parsed;
+                        if (yLabel === '₱') return ' ₱' + Number(v).toLocaleString('en-PH');
+                        return ' ' + v;
+                    }
+                }
+            }
+        },
         scales: {
-            x: { ticks: { color: dim }, grid: { color: grid } },
-            y: { ticks: { color: dim }, grid: { color: grid } }
+            x: { ticks: { color: t.muted, font: { size: 11 } }, grid: { color: t.grid, drawBorder: false } },
+            y: { ticks: { color: t.muted, font: { size: 11 } }, grid: { color: t.grid, drawBorder: false }, beginAtZero: true }
         }
     };
-};
+}
 
 async function loadChart(endpoint, canvasId, buildFn) {
     try {
         const res = await fetch(endpoint);
         const data = await res.json();
-        const ctx = document.getElementById(canvasId).getContext('2d');
+        const ctx = document.getElementById(canvasId)?.getContext('2d');
+        if (!ctx) return;
         buildFn(ctx, data);
-    } catch(e) { console.error('Chart load error:', e); }
+    } catch(e) { console.error('Chart error:', e); }
 }
 
-// Revenue Chart
+// ── 1. Revenue Bar (gradient fill) ───────────────────────────────────────
 loadChart('{{ route("admin.dashboard.revenue-chart") }}', 'revenueChart', (ctx, d) => {
-    new Chart(ctx, { type: 'bar', data: {
-        labels: d.labels,
-        datasets: [{ label: 'Revenue (₱)', data: d.data, backgroundColor: 'rgba(255,107,0,0.5)', borderColor: '#ff6b00', borderWidth: 2, borderRadius: 6 }]
-    }, options: { ...getChartTheme(), plugins: { ...getChartTheme().plugins, legend: { display: false } } } });
+    const grad = ctx.createLinearGradient(0, 0, 0, 300);
+    grad.addColorStop(0,   'rgba(255,107,0,0.85)');
+    grad.addColorStop(1,   'rgba(255,107,0,0.15)');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: d.labels,
+            datasets: [{
+                label: 'Revenue',
+                data: d.data,
+                backgroundColor: grad,
+                borderColor: '#ff6b00',
+                borderWidth: 0,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: { ...baseOptions('₱'), animation: { duration: 900, delay: (ctx) => ctx.dataIndex * 60 } }
+    });
 });
 
-// Booking Status Doughnut
+// ── 2. Booking Status Doughnut ───────────────────────────────────────────
 loadChart('{{ route("admin.dashboard.booking-chart") }}', 'bookingChart', (ctx, d) => {
-    new Chart(ctx, { type: 'doughnut', data: {
-        labels: d.labels,
-        datasets: [{ data: d.data, backgroundColor: ['#3b82f6','#f59e0b','#3b82f6','#22c55e','#ff6b00','#6b7280','#ef4444','#dc2626'], borderWidth: 0 }]
-    }, options: { plugins: { legend: { labels: { color: getChartTheme().plugins.legend.labels.color, font: { size: 11 } } } }, cutout: '65%' } });
+    const t = themeTokens();
+    const palette = ['#ff8c3a','#fbbf24','#60a5fa','#4ade80','#a78bfa','#f472b6','#34d399','#ef4444','#94a3b8'];
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: d.labels,
+            datasets: [{
+                data: d.data,
+                backgroundColor: d.labels.map((_, i) => palette[i % palette.length]),
+                borderWidth: 3,
+                borderColor: t.card,
+                hoverOffset: 10,
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            cutout: '72%',
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'right',
+                    labels: { color: t.muted, font: { size: 11 }, padding: 14, usePointStyle: true, pointStyle: 'circle' }
+                },
+                tooltip: {
+                    backgroundColor: t.card,
+                    titleColor: t.text,
+                    bodyColor: t.muted,
+                    borderColor: 'rgba(255,255,255,.1)',
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 10,
+                }
+            },
+            animation: { animateRotate: true, animateScale: true, duration: 1000 }
+        }
+    });
 });
 
-// Vehicle Bar
+// ── 3. Top Vehicles Horizontal Bar ───────────────────────────────────────
 loadChart('{{ route("admin.dashboard.vehicle-chart") }}', 'vehicleChart', (ctx, d) => {
-    new Chart(ctx, { type: 'bar', data: {
-        labels: d.labels,
-        datasets: [{ label: 'Bookings', data: d.data, backgroundColor: 'rgba(59,130,246,0.4)', borderColor: '#3b82f6', borderWidth: 2, borderRadius: 6 }]
-    }, options: { ...getChartTheme(), indexAxis: 'y', plugins: { ...getChartTheme().plugins, legend: { display: false } } } });
+    const grad = ctx.createLinearGradient(300, 0, 0, 0);
+    grad.addColorStop(0, 'rgba(96,165,250,0.85)');
+    grad.addColorStop(1, 'rgba(96,165,250,0.15)');
+    const t = themeTokens();
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: d.labels,
+            datasets: [{
+                label: 'Bookings',
+                data: d.data,
+                backgroundColor: grad,
+                borderColor: '#60a5fa',
+                borderWidth: 0,
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            ...baseOptions(),
+            indexAxis: 'y',
+            animation: { duration: 900, delay: (ctx) => ctx.dataIndex * 80 },
+        }
+    });
 });
 
-// Timeline Line
+// ── 4. 30-Day Booking Timeline (Area) ────────────────────────────────────
 loadChart('{{ route("admin.dashboard.booking-timeline") }}', 'timelineChart', (ctx, d) => {
-    new Chart(ctx, { type: 'line', data: {
-        labels: d.labels,
-        datasets: [{ label: 'Bookings', data: d.data, borderColor: '#ff8c3a', backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3 }]
-    }, options: { ...getChartTheme(), plugins: { ...getChartTheme().plugins, legend: { display: false } } } });
+    const grad = ctx.createLinearGradient(0, 0, 0, 260);
+    grad.addColorStop(0,   'rgba(255,107,0,0.35)');
+    grad.addColorStop(1,   'rgba(255,107,0,0.0)');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: d.labels,
+            datasets: [{
+                label: 'Bookings',
+                data: d.data,
+                borderColor: '#ff8c3a',
+                backgroundColor: grad,
+                borderWidth: 2.5,
+                tension: 0.45,
+                fill: true,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: '#ff6b00',
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2,
+            }]
+        },
+        options: { ...baseOptions(), animation: { duration: 1100 } }
+    });
 });
+
+window.addEventListener('themeChanged', () => window.location.reload());
 </script>
 @endpush

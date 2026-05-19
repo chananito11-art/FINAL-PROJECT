@@ -39,41 +39,144 @@
         }
 
         .hero-banner {
-            min-height: 362px;
+            min-height: 520px;
             position: relative;
             background:
-                linear-gradient(rgba(10, 13, 22, 0.52), rgba(10, 13, 22, 0.52)),
+                linear-gradient(160deg, rgba(10,13,22,0.80) 0%, rgba(10,13,22,0.55) 100%),
                 url('https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=1800&q=80') center/cover no-repeat;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
             color: white;
-            padding: 48px 20px;
+            padding: 100px 20px 64px;
         }
 
         .hero-inner {
-            max-width: 820px;
+            max-width: 860px;
+            width: 100%;
         }
 
-        .hero-icon {
-            width: 44px;
-            height: 44px;
-            margin: 0 auto 10px;
-            opacity: 0.95;
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(255,107,0,.18);
+            border: 1px solid rgba(255,107,0,.35);
+            border-radius: 999px;
+            padding: 6px 16px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #ffb070;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
         }
 
         .hero-banner h1 {
-            margin: 0 0 12px;
-            font-size: clamp(2.4rem, 6vw, 4rem);
-            font-weight: 800;
-            letter-spacing: -0.04em;
+            margin: 0 0 10px;
+            font-size: clamp(2.6rem, 6vw, 4.2rem);
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            line-height: 1.05;
+        }
+        .hero-banner h1 .accent {
+            background: linear-gradient(90deg, #ff8c3a, #ffca7a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .hero-banner p {
-            margin: 0;
-            font-size: clamp(1rem, 2vw, 1.2rem);
-            color: rgba(255, 255, 255, 0.92);
+        .hero-banner > .hero-inner > p {
+            margin: 0 0 32px;
+            font-size: clamp(1rem, 2vw, 1.15rem);
+            color: rgba(255,255,255,0.70);
+        }
+
+        /* Date Wizard */
+        .date-wizard {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 22px;
+            padding: 24px 28px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 14px;
+            align-items: flex-end;
+            text-align: left;
+        }
+
+        .wizard-field label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: rgba(255,255,255,0.55);
+            margin-bottom: 7px;
+        }
+
+        .wizard-input {
+            width: 100%;
+            height: 50px;
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 13px;
+            color: white;
+            font-family: inherit;
+            font-size: 0.95rem;
+            padding: 0 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .wizard-input::placeholder { color: rgba(255,255,255,0.4); }
+        .wizard-input:focus {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,107,0,.6);
+            box-shadow: 0 0 0 4px rgba(255,107,0,.15);
+        }
+        .wizard-input option { background: #0d1128; color: white; }
+
+        .wizard-search-btn {
+            height: 50px;
+            padding: 0 26px;
+            background: linear-gradient(135deg, #ff8c3a 0%, #ff6b00 100%);
+            border: none;
+            border-radius: 13px;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(255,107,0,.45);
+            transition: filter .2s, transform .2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .wizard-search-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        .wizard-duration-hint {
+            grid-column: 1 / -1;
+            font-size: 0.82rem;
+            color: rgba(255,255,255,.5);
+            text-align: center;
+            min-height: 18px;
+            margin-top: -4px;
+        }
+
+        @media (max-width: 820px) {
+            .date-wizard { grid-template-columns: 1fr 1fr; }
+            .wizard-search-btn { grid-column: 1/-1; justify-content: center; }
+        }
+        @media (max-width: 520px) {
+            .date-wizard { grid-template-columns: 1fr; padding: 18px; }
         }
 
         .page-shell {
@@ -82,60 +185,11 @@
             padding: 0 16px 40px;
         }
 
-        .filter-card {
-            margin-top: 14px;
-            background: var(--surface);
-            border: 1px solid #edf1f6;
-            border-radius: 18px;
-            box-shadow: var(--shadow);
-            padding: 26px;
-        }
-
-        .filter-title,
         .section-title {
-            margin: 0 0 18px;
-            font-size: clamp(1.8rem, 4vw, 2.2rem);
+            margin: 0 0 6px;
+            font-size: clamp(1.6rem, 3.5vw, 2rem);
             font-weight: 800;
             letter-spacing: -0.04em;
-        }
-
-        .filter-grid {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr 1fr;
-            gap: 16px;
-        }
-
-        .filter-field {
-            position: relative;
-        }
-
-        .filter-field svg {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 18px;
-            height: 18px;
-            color: #8e97a9;
-        }
-
-        .filter-control {
-            width: 100%;
-            height: 44px;
-            border: 0;
-            border-radius: 12px;
-            background: var(--surface-soft);
-            padding: 0 16px;
-            color: var(--text);
-            font-size: 1rem;
-        }
-
-        .filter-control.search {
-            padding-left: 48px;
-        }
-
-        .filter-control:focus {
-            outline: 2px solid rgba(9, 16, 31, 0.14);
         }
 
         .vehicles-section {
@@ -580,48 +634,43 @@
             </div>
         </nav>
         <div class="hero-inner">
-            <svg class="hero-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M3 13l1.5-4.5A3 3 0 0 1 7.35 6h9.3a3 3 0 0 1 2.85 2.5L21 13"></path>
-                <path d="M5 16h14"></path>
-                <path d="M6 16v2a1 1 0 0 0 1 1h1"></path>
-                <path d="M16 19h1a1 1 0 0 0 1-1v-2"></path>
-                <circle cx="7.5" cy="15.5" r="1.5"></circle>
-                <circle cx="16.5" cy="15.5" r="1.5"></circle>
-            </svg>
-            <h1>OrangeCrush Car rentals</h1>
-            <p>Find the perfect vehicle for your journey</p>
+            <div class="hero-eyebrow">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Book in minutes &mdash; No hidden fees
+            </div>
+            <h1>Your Journey Starts<br><span class="accent">When You Need It</span></h1>
+            <p>Pick your dates and we'll show you every available car instantly.</p>
+
+            <form class="date-wizard" action="{{ route('vehicles.index') }}" method="GET" id="heroWizard">
+                <div class="wizard-field">
+                    <label for="hz_pickup">&#128197; Pickup Date</label>
+                    <input type="date" name="pickup_date" id="hz_pickup" class="wizard-input"
+                           min="{{ date('Y-m-d') }}" required>
+                </div>
+                <div class="wizard-field">
+                    <label for="hz_return">&#128197; Return Date</label>
+                    <input type="date" name="return_date" id="hz_return" class="wizard-input"
+                           min="{{ date('Y-m-d') }}" required>
+                </div>
+                <div class="wizard-field">
+                    <label for="hz_type">&#128663; Vehicle Type</label>
+                    <select name="type" id="hz_type" class="wizard-input">
+                        <option value="">Any Type</option>
+                        @foreach(['Sedan','SUV','Pickup Truck','Van','Hatchback','Crossover'] as $t)
+                            <option value="{{ $t }}">{{ $t }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="wizard-search-btn" id="heroSearchBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                    Find Cars
+                </button>
+                <div class="wizard-duration-hint" id="wizardHint"></div>
+            </form>
         </div>
     </section>
 
-    <main class="page-shell">
-        <section class="filter-card" id="fleet">
-            <h2 class="filter-title">Search &amp; Filter</h2>
-            <div class="filter-grid">
-                <div class="filter-field">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="11" cy="11" r="7"></circle>
-                        <path d="M20 20l-3.5-3.5"></path>
-                    </svg>
-                    <input class="filter-control search" id="vehicleSearch" type="text" placeholder="Search by car name or brand...">
-                </div>
-                <div class="filter-field">
-                    <select class="filter-control" id="typeFilter">
-                        <option value="">All Types</option>
-                        @foreach($vehicles->pluck('type')->unique()->values() as $type)
-                            <option value="{{ $type }}">{{ $type }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="filter-field">
-                    <select class="filter-control" id="transmissionFilter">
-                        <option value="">All Transmissions</option>
-                        @foreach($vehicles->pluck('transmission')->unique()->values() as $transmission)
-                            <option value="{{ $transmission }}">{{ $transmission }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-        </section>
+    <main class="page-shell" id="fleet">
 
         <section class="vehicles-section">
             <h2 class="section-title">Available Vehicles</h2>
@@ -643,7 +692,7 @@
 
                         <div class="vehicle-body">
                             <h3 class="vehicle-name">{{ $vehicle->name }}</h3>
-                            <div class="vehicle-brand">{{ $vehicle->brand ?? $vehicle->category?->category_name ?? 'Premium Fleet' }}</div>
+                            <div class="vehicle-brand">{{ $vehicle->brand ?? 'Premium Fleet' }}</div>
 
                             <div class="vehicle-specs">
                                 <span class="vehicle-spec">
@@ -669,13 +718,14 @@
 
                             <div class="vehicle-footer">
                                 <div class="vehicle-price">
+                                    <small style="margin-bottom:2px">Starts at</small>
                                     PHP {{ number_format($vehicle->price_per_day, 0) }}
                                     <small>per day</small>
                                 </div>
                                 @auth
-                                    <a class="book-btn" href="{{ route('customer.booking.create', ['vehicle' => $vehicle->id]) }}">Book Now</a>
+                                    <a class="book-btn" href="{{ route('vehicles.index', ['pickup_date' => '', 'return_date' => '']) }}#{{ $vehicle->id }}" onclick="event.preventDefault(); window.location.href='{{ route('vehicles.show', $vehicle->id) }}';">Book Now</a>
                                 @else
-                                    <a class="book-btn" href="{{ route('login') }}?redirect={{ urlencode(route('customer.booking.create', ['vehicle' => $vehicle->id])) }}">Book Now</a>
+                                    <a class="book-btn" href="{{ route('login') }}?redirect={{ urlencode(route('vehicles.show', $vehicle->id)) }}">Book Now</a>
                                 @endauth
                             </div>
                         </div>
@@ -686,45 +736,39 @@
 
     </main>
     <script>
-        const searchInput = document.getElementById('vehicleSearch');
-        const typeFilter = document.getElementById('typeFilter');
-        const transmissionFilter = document.getElementById('transmissionFilter');
-        const vehicleCards = Array.from(document.querySelectorAll('.vehicle-card'));
-        const vehicleCount = document.getElementById('vehicleCount');
+        // ── Wizard Duration Hint ──────────────────────────────────────────
+        const hzPickup = document.getElementById('hz_pickup');
+        const hzReturn = document.getElementById('hz_return');
+        const wizardHint = document.getElementById('wizardHint');
+        const heroSearchBtn = document.getElementById('heroSearchBtn');
 
-        function formatPeso(amount) {
-            return `PHP ${Number(amount).toLocaleString('en-PH', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            })}`;
+        function updateWizardHint() {
+            if (!hzPickup.value || !hzReturn.value) { wizardHint.textContent = ''; return; }
+            const p = new Date(hzPickup.value), r = new Date(hzReturn.value);
+            if (r <= p) { wizardHint.textContent = 'Return date must be after pickup date.'; return; }
+            const days = Math.round((r - p) / 86400000);
+            wizardHint.textContent = `${days} day${days !== 1 ? 's' : ''} rental — click Find Cars to see available vehicles`;
         }
 
-        function filterVehicles() {
-            const query = searchInput.value.trim().toLowerCase();
-            const type = typeFilter.value.trim().toLowerCase();
-            const transmission = transmissionFilter.value.trim().toLowerCase();
-
-            let visibleCount = 0;
-
-            vehicleCards.forEach((card) => {
-                const matchesQuery =
-                    !query ||
-                    card.dataset.name.includes(query) ||
-                    card.dataset.brand.includes(query);
-                const matchesType = !type || card.dataset.type === type;
-                const matchesTransmission = !transmission || card.dataset.transmission === transmission;
-                const visible = matchesQuery && matchesType && matchesTransmission;
-
-                card.classList.toggle('hidden-card', !visible);
-                if (visible) visibleCount += 1;
+        if (hzPickup) {
+            hzPickup.addEventListener('change', () => {
+                if (hzReturn.value && hzReturn.value <= hzPickup.value) hzReturn.value = '';
+                hzReturn.min = hzPickup.value;
+                updateWizardHint();
             });
-
-            vehicleCount.textContent = visibleCount;
+            hzReturn.addEventListener('change', updateWizardHint);
         }
 
-        searchInput.addEventListener('input', filterVehicles);
-        typeFilter.addEventListener('change', filterVehicles);
-        transmissionFilter.addEventListener('change', filterVehicles);
+        document.getElementById('heroWizard')?.addEventListener('submit', function(e) {
+            const p = hzPickup.value, r = hzReturn.value;
+            if (!p || !r || new Date(r) <= new Date(p)) {
+                e.preventDefault();
+                wizardHint.textContent = 'Please select a valid pickup and return date.';
+                wizardHint.style.color = '#f87171';
+            } else {
+                heroSearchBtn.textContent = 'Searching…';
+            }
+        });
 
         // Theme sync
         const themeBtn = document.getElementById('themeToggle');

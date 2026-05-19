@@ -74,17 +74,13 @@ class DashboardController extends Controller
 
     public function bookingChart(): JsonResponse
     {
-        $statuses = [
-            'awaiting_approval', 'pending_payment', 'awaiting_verification',
-            'confirmed', 'ongoing', 'completed', 'rejected', 'cancelled',
-        ];
-
         $counts = Booking::select('status', DB::raw('COUNT(*) as count'))
             ->groupBy('status')
-            ->pluck('count', 'status');
+            ->orderBy('count', 'desc')
+            ->get();
 
-        $labels = array_map(fn($s) => ucwords(str_replace('_', ' ', $s)), $statuses);
-        $data   = array_map(fn($s) => $counts[$s] ?? 0, $statuses);
+        $labels = $counts->map(fn($c) => ucwords(str_replace('_', ' ', $c->status)));
+        $data   = $counts->pluck('count');
 
         return response()->json(compact('labels', 'data'));
     }

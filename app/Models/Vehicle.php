@@ -11,49 +11,58 @@ class Vehicle extends Model
     use HasFactory;
 
     protected $fillable = [
-        'category_id',
         'name',
         'brand',
         'model',
         'year',
         'plate_number',
+        'odometer',
+        'maintenance_interval_km',
         'type',
         'transmission',
         'fuel',
         'capacity',
         'price_per_day',
+        'late_penalty_per_hour',
+        'refueling_fee_per_liter',
+        'fuel_capacity_liters',
         'status',
         'description',
         'image',
     ];
 
     protected $casts = [
-        'price_per_day' => 'decimal:2',
-        'year'          => 'integer',
-        'capacity'      => 'integer',
+        'price_per_day'           => 'decimal:2',
+        'late_penalty_per_hour'   => 'decimal:2',
+        'refueling_fee_per_liter' => 'decimal:2',
+        'fuel_capacity_liters'    => 'integer',
+        'year'                    => 'integer',
+        'capacity'                => 'integer',
+        'odometer'                => 'integer',
     ];
 
     // ── Relationships ─────────────────────────────────────────────────────────
-    public function category()
-    {
-        return $this->belongsTo(Category::class);
-    }
-
     public function bookings()
     {
         return $this->hasMany(Booking::class);
     }
 
+
+    public function maintenanceLogs()
+    {
+        return $this->hasMany(MaintenanceLog::class);
+    }
+
     // ── Scopes ────────────────────────────────────────────────────────────────
     public function scopeAvailable($query)
     {
-        return $query->where('status', 'available');
+        return $query->whereIn('status', ['available', 'rented']);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
     public function isAvailable(): bool
     {
-        return $this->status === 'available';
+        return in_array($this->status, ['available', 'rented']);
     }
 
     /**
@@ -63,14 +72,18 @@ class Vehicle extends Model
     public static function isAvailableForDates(int $vehicleId, Carbon $pickup, Carbon $return, ?int $excludeBookingId = null): bool
     {
         return !\App\Models\Booking::where('vehicle_id', $vehicleId)
-            ->whereIn('status', ['confirmed', 'awaiting_verification', 'ongoing'])
+            ->whereIn('status', [
+                \App\Models\Booking::STATUS_AWAITING_APPROVAL, 
+                \App\Models\Booking::STATUS_PENDING_PAYMENT, 
+                \App\Models\Booking::STATUS_AWAITING_VERIFICATION, 
+                \App\Models\Booking::STATUS_CONFIRMED, 
+                \App\Models\Booking::STATUS_ONGOING
+            ])
             ->where(function ($q) use ($pickup, $return) {
-                $q->whereBetween('pickup_date', [$pickup, $return])
-                  ->orWhereBetween('return_date', [$pickup, $return])
-                  ->orWhere(function ($q2) use ($pickup, $return) {
-                      $q2->where('pickup_date', '<=', $pickup)
-                         ->where('return_date', '>=', $return);
-                  });
+                // The occupied range is [pickup_date, (actual end) + 1 day]
+                // If it is 'ongoing' and overdue, the effective return date stretches to NOW().
+                $q->where('pickup_date', '<=', $return)
+                  ->whereRaw("DATE_ADD(IF(status = 'ongoing', GREATEST(return_date, NOW()), return_date), INTERVAL 1 DAY) >= ?", [$pickup->toDateString()]);
             })
             ->when($excludeBookingId, fn($q) => $q->where('id', '!=', $excludeBookingId))
             ->exists();

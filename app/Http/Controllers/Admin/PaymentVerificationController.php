@@ -55,7 +55,21 @@ class PaymentVerificationController extends Controller
             'all'      => Payment::count(),
         ];
 
-        return view('admin.payments.index', compact('payments', 'tab', 'counts'));
+        $stats = [
+            'verified_today'        => Payment::where('status', 'verified')
+                                              ->whereDate('verified_at', today())
+                                              ->sum('amount'),
+            'total_verified'        => Payment::where('status', 'verified')->sum('amount'),
+            'bookings_with_balance' => Booking::whereRaw('total_amount > COALESCE((
+                                            SELECT SUM(p.amount) FROM payments p
+                                            WHERE p.booking_id = bookings.id AND p.status = "verified"
+                                        ), 0)')
+                                        ->whereNotIn('status', ['cancelled', 'rejected', 'completed', 'no_show'])
+                                        ->count(),
+        ];
+
+        return view('admin.payments.index', compact('payments', 'tab', 'counts', 'stats'));
+
     }
 
     public function show(Payment $payment)
@@ -79,21 +93,43 @@ class PaymentVerificationController extends Controller
             'admin_payment_notes' => $request->admin_notes,
         ]);
 
-        $payment->booking->update(['status' => Booking::STATUS_CONFIRMED]);
-        $payment->booking->vehicle->update(['status' => 'rented']);
+        $booking = $payment->booking;
+        $totalPaid = $booking->paid_amount;
+
+        // Only update booking payment status if the booking is in a payment-phase state.
+        // Do not downgrade a booking that is already confirmed, ongoing, or completed.
+        $paymentPhaseStatuses = [
+            Booking::STATUS_AWAITING_VERIFICATION,
+            Booking::STATUS_PARTIAL_PAID,
+            Booking::STATUS_PENDING_PAYMENT,
+        ];
+
+        if (in_array($booking->status, $paymentPhaseStatuses)) {
+            if ($totalPaid >= $booking->total_amount) {
+                $booking->update(['status' => Booking::STATUS_FULLY_PAID]);
+                $msg = 'Payment verified. Booking is now Fully Paid.';
+            } else {
+                $booking->update(['status' => Booking::STATUS_PARTIAL_PAID]);
+                $msg = 'Payment verified. Booking is now Partial Paid.';
+            }
+        } else {
+            // Booking is already confirmed/ongoing/completed — just acknowledge payment
+            $msg = 'Payment verified. Booking status unchanged (already ' . ucwords(str_replace('_', ' ', $booking->status)) . ').';
+        }
 
         ActivityLog::log(
-            "Payment verified for booking #{$payment->booking_id}",
+            "Payment verified for booking #{$booking->id}. Paid: ₱" . number_format($payment->amount, 2),
             Payment::class,
             $payment->id
         );
 
         try {
-            $payment->booking->user->notify(new PaymentVerified($payment->booking));
+            if ($booking->user) {
+                $booking->user->notify(new PaymentVerified($booking));
+            }
         } catch (\Exception) {}
 
-        return redirect()->route('admin.payments.index')
-            ->with('success', 'Payment verified and booking confirmed.');
+        return redirect()->route('admin.payments.index')->with('success', $msg);
     }
 
     public function reject(Request $request, Payment $payment)
@@ -107,7 +143,11 @@ class PaymentVerificationController extends Controller
             'verified_at'      => now(),
         ]);
 
-        $payment->booking->update(['status' => Booking::STATUS_PENDING_PAYMENT]);
+        // Only roll back to pending_payment if we were actually awaiting verification
+        // Don't touch bookings that are ongoing, completed, etc.
+        if ($payment->booking->status === Booking::STATUS_AWAITING_VERIFICATION) {
+            $payment->booking->update(['status' => Booking::STATUS_PENDING_PAYMENT]);
+        }
 
         ActivityLog::log(
             "Payment rejected for booking #{$payment->booking_id}: {$request->rejection_reason}",

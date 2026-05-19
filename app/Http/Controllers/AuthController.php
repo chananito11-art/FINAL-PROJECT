@@ -32,10 +32,11 @@ class AuthController extends Controller
 
             // Block suspended customers
             if ($user->hasRole('customer') && $user->status === 'suspended') {
+                $reason = $user->suspension_reason ? " Reason: {$user->suspension_reason}" : "";
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
-                return back()->withErrors(['email' => 'Your account has been suspended. Please contact support.'])->onlyInput('email');
+                return back()->withErrors(['email' => "Your account has been suspended.{$reason} Please contact support."])->onlyInput('email');
             }
 
             // Block inactive employees

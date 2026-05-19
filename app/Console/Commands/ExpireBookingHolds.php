@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 class ExpireBookingHolds extends Command
 {
     protected $signature   = 'bookings:expire-holds';
-    protected $description = 'Auto-cancel pending_payment bookings whose 24-hour hold has expired.';
+    protected $description = 'Auto-cancel pending_payment bookings whose 1-hour hold has expired.';
 
     public function handle(): int
     {

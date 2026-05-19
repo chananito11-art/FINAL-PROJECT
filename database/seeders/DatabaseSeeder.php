@@ -3,7 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Booking;
-use App\Models\Category;
+
+
 use App\Models\Payment;
 use App\Models\TermsAndCondition;
 use App\Models\User;
@@ -58,15 +59,10 @@ class DatabaseSeeder extends Seeder
         ]);
         $customer2->assignRole('customer');
 
-        // ── Categories ────────────────────────────────────────────────────────
-        $toyota    = Category::create(['category_name' => 'Toyota']);
-        $honda     = Category::create(['category_name' => 'Honda']);
-        $mitsubishi = Category::create(['category_name' => 'Mitsubishi']);
-        $ford      = Category::create(['category_name' => 'Ford']);
+
 
         // ── Vehicles ──────────────────────────────────────────────────────────
         $v1 = Vehicle::create([
-            'category_id'   => $toyota->id,
             'name'          => 'Toyota Vios',
             'brand'         => 'Toyota',
             'model'         => 'Vios',
@@ -78,11 +74,11 @@ class DatabaseSeeder extends Seeder
             'capacity'      => 5,
             'price_per_day' => 1500.00,
             'status'        => 'available',
+            'image'         => 'vehicles/toyota_vios.png',
             'description'   => 'Reliable and fuel-efficient sedan perfect for city driving.',
         ]);
 
         $v2 = Vehicle::create([
-            'category_id'   => $honda->id,
             'name'          => 'Honda HR-V',
             'brand'         => 'Honda',
             'model'         => 'HR-V',
@@ -94,11 +90,11 @@ class DatabaseSeeder extends Seeder
             'capacity'      => 5,
             'price_per_day' => 2200.00,
             'status'        => 'available',
+            'image'         => 'vehicles/honda_hrv.png',
             'description'   => 'Compact SUV with great ground clearance and modern features.',
         ]);
 
         $v3 = Vehicle::create([
-            'category_id'   => $mitsubishi->id,
             'name'          => 'Mitsubishi Montero Sport',
             'brand'         => 'Mitsubishi',
             'model'         => 'Montero Sport',
@@ -110,11 +106,11 @@ class DatabaseSeeder extends Seeder
             'capacity'      => 7,
             'price_per_day' => 3500.00,
             'status'        => 'available',
+            'image'         => 'vehicles/mitsubishi_montero.png',
             'description'   => '7-seater SUV with powerful diesel engine, great for family trips.',
         ]);
 
         $v4 = Vehicle::create([
-            'category_id'   => $ford->id,
             'name'          => 'Ford Ranger',
             'brand'         => 'Ford',
             'model'         => 'Ranger',
@@ -126,11 +122,11 @@ class DatabaseSeeder extends Seeder
             'capacity'      => 5,
             'price_per_day' => 3000.00,
             'status'        => 'available',
+            'image'         => 'vehicles/ford_ranger.png',
             'description'   => 'Tough pickup truck with large cargo capacity, ideal for adventure.',
         ]);
 
         Vehicle::create([
-            'category_id'   => $toyota->id,
             'name'          => 'Toyota Innova',
             'brand'         => 'Toyota',
             'model'         => 'Innova',
@@ -142,9 +138,11 @@ class DatabaseSeeder extends Seeder
             'capacity'      => 8,
             'price_per_day' => 2800.00,
             'status'        => 'available',
+            'image'         => 'vehicles/toyota_innova.png',
             'description'   => 'Spacious MPV perfect for group trips and family outings.',
         ]);
 
+        /*
         // ── Sample booking (awaiting verification) ────────────────────────────
         $booking = Booking::create([
             'user_id'                => $customer1->id,
@@ -169,6 +167,7 @@ class DatabaseSeeder extends Seeder
             'screenshot_path' => 'payments/sample.jpg',
             'status'          => 'pending',
         ]);
+        */
 
         // ── Terms & Conditions ────────────────────────────────────────────────
         TermsAndCondition::create([

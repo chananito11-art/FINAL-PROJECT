@@ -14,6 +14,8 @@
     .s-awaiting_approval{background:rgba(59,130,246,.15);color:#60a5fa}
     .s-pending_payment{background:rgba(245,158,11,.15);color:#fbbf24}
     .s-awaiting_verification{background:rgba(59,130,246,.15);color:#60a5fa}
+    .s-partial_paid{background:rgba(255,107,0,.15);color:#ff8c3a}
+    .s-fully_paid{background:rgba(34,197,94,.15);color:#4ade80}
     .s-confirmed{background:rgba(34,197,94,.15);color:#4ade80}
     .s-rejected{background:rgba(239,68,68,.15);color:#f87171}
     .s-ongoing{background:rgba(255,107,0,.15);color:#ff8c3a}
@@ -53,6 +55,33 @@
         <span class="badge s-{{ $booking->status }}">{{ ucwords(str_replace('_',' ',$booking->status)) }}</span>
     </div>
 
+    @if($booking->status === 'ongoing' && $booking->rental)
+    <div style="background:linear-gradient(135deg,rgba(255,107,0,.15),rgba(255,140,58,.05));border:1px solid rgba(255,107,0,.3);border-radius:16px;padding:22px;margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff8c3a" stroke-width="2.5"><path d="M3 13l1.5-4.5A3 3 0 0 1 7.35 6h9.3a3 3 0 0 1 2.85 2.5L21 13"/><path d="M5 16h14"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>
+            <h2 style="font-size:1.1rem;font-weight:800;color:var(--orange-l);margin:0">Active Rental</h2>
+        </div>
+        <p style="font-size:.9rem;color:var(--text);margin-bottom:16px;line-height:1.5">
+            Your vehicle is currently with you. Please note the return details below to avoid any late fees or refueling charges.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--dark2);border-radius:12px;padding:16px;border:1px solid var(--line)">
+            <div>
+                <span style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700">Actual Pickup</span>
+                <div style="font-size:.95rem;font-weight:600;margin-top:4px">{{ $booking->rental->pickup_date?->format('M d, Y h:i A') }}</div>
+            </div>
+            <div>
+                <span style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700">Due Return</span>
+                <div style="font-size:.95rem;font-weight:600;margin-top:4px;color:{{ $booking->rental->isOverdue() ? '#f87171' : 'var(--orange-l)' }}">
+                    {{ $booking->rental->expected_return_date?->format('M d, Y h:i A') }}
+                </div>
+            </div>
+            <div style="grid-column:1/-1;margin-top:4px;padding-top:12px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)">
+                <strong style="color:var(--text)">Important:</strong> Return by 12:00 PM on the due date. The vehicle must be returned with <strong>{{ $booking->rental->pickup_fuel ?? 'the same' }}%</strong> fuel level.
+            </div>
+        </div>
+    </div>
+    @endif
+
     @if($booking->status === 'rejected' && $booking->rejection_reason)
     <div class="rejection-box" style="margin-bottom:16px">
         <strong>Rejection Reason:</strong> {{ $booking->rejection_reason }}
@@ -91,27 +120,35 @@
     </div>
     @endif
 
-    @if($booking->payment)
+    @if($booking->payments()->exists())
     <div class="card">
-        <h2>Payment</h2>
-        <div class="row"><span>Reference Code</span><strong>{{ $booking->payment->reference_code }}</strong></div>
-        @if($booking->payment->gcash_transaction_reference_number)
-        <div class="row"><span>GCash Transaction #</span><strong>{{ $booking->payment->gcash_transaction_reference_number }}</strong></div>
-        @endif
-        <div class="row"><span>Amount Submitted</span><strong>PHP {{ number_format($booking->payment->amount_submitted ?? $booking->payment->amount, 0) }}</strong></div>
-        <div class="row"><span>Status</span><strong>{{ ucfirst($booking->payment->status) }}</strong></div>
-        @if($booking->payment->screenshot_path)
-        <div style="margin-top:14px">
-            <p style="font-size:.8rem;color:var(--text-dim);margin-bottom:8px">PAYMENT SCREENSHOT</p>
-            <img src="{{ $booking->payment->screenshot_url }}" style="width:100%;border-radius:10px;max-height:300px;object-fit:contain;background:var(--dark2)">
+        <h2>Payment History</h2>
+        @foreach($booking->payments()->latest()->get() as $p)
+        <div style="padding:12px 0; {{ !$loop->last ? 'border-bottom:1px solid var(--line);' : '' }}">
+            <div class="row" style="border:none; padding:0 0 4px"><span>Date</span><strong>{{ $p->created_at->format('M d, Y h:i A') }}</strong></div>
+            <div class="row" style="border:none; padding:0 0 4px"><span>Amount</span><strong>PHP {{ number_format($p->amount_submitted ?? $p->amount, 2) }}</strong></div>
+            <div class="row" style="border:none; padding:0"><span>Status</span><strong style="{{ $p->status==='verified' ? 'color:#4ade80' : ($p->status==='rejected'?'color:#f87171':'color:#fbbf24') }}">{{ ucfirst($p->status) }}</strong></div>
+        </div>
+        @endforeach
+    </div>
+    @endif
+
+    @if($booking->balance_amount > 0 && !in_array($booking->status, ['awaiting_approval', 'rejected', 'cancelled', 'no_show']))
+        @if($booking->payments()->where('status', 'pending')->exists())
+        <div style="background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.2); border-radius:12px; padding:14px; color:#fbbf24; font-size:.9rem; text-align:center; margin-bottom:16px">
+            You have a pending payment being verified. Please wait before submitting another.
+        </div>
+        @else
+        <div style="margin-bottom:16px">
+            <a href="{{ route('customer.payment.show', $booking) }}" class="pay-btn" style="margin-bottom:10px">
+                {{ $booking->payments()->exists() ? 'Pay Remaining Balance' : 'Complete GCash Payment' }} (₱{{ number_format($booking->balance_amount, 2) }}) →
+            </a>
         </div>
         @endif
-    </div>
-    @elseif($booking->status === 'pending_payment')
-    <a href="{{ route('customer.payment.show', $booking) }}" class="pay-btn" style="margin-bottom:10px">Complete GCash Payment →</a>
+    @endif
 
-    {{-- Cancel button (only for pending_payment) --}}
-    <button class="cancel-btn" id="cancelBtn" type="button">Cancel Reservation</button>
+    @if($booking->status === 'pending_payment')
+    <button class="cancel-btn" id="cancelBtn" type="button" style="margin-bottom:16px">Cancel Reservation</button>
     @endif
 
     <div class="card">
@@ -126,7 +163,16 @@
                 ['ongoing','Ongoing','Vehicle is currently with you'],
                 ['completed','Completed','Rental completed. Thank you!'],
             ];
-            $order=['awaiting_approval'=>0,'pending_payment'=>1,'awaiting_verification'=>2,'confirmed'=>3,'ongoing'=>4,'completed'=>5];
+            $order=[
+                'awaiting_approval'=>0,
+                'pending_payment'=>1,
+                'awaiting_verification'=>2,
+                'partial_paid'=>3,
+                'fully_paid'=>3,
+                'confirmed'=>3,
+                'ongoing'=>4,
+                'completed'=>5
+            ];
             $cur=$order[$booking->status]??-1;
             @endphp
             @foreach($steps as [$s,$label,$desc])

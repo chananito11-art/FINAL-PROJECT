@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\GuestProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,7 +32,7 @@ class UserManagementController extends Controller
             ->withQueryString();
 
         // Employees tab
-        $employees = User::role(['admin', 'super_admin'])
+        $employees = User::role(['admin', 'super_admin', 'staff'])
             ->with('createdBy')
             ->when($request->search, fn($q) => $q->where(function ($sub) use ($request) {
                 $sub->where('first_name', 'like', '%' . $request->search . '%')
@@ -42,9 +43,21 @@ class UserManagementController extends Controller
             ->paginate(15, ['*'], 'epage')
             ->withQueryString();
 
-        $roles = Role::whereIn('name', ['admin', 'super_admin'])->get();
+        // Walk-ins tab — now using GuestProfile model
+        $walkins = GuestProfile::withCount('bookings')
+            ->when($request->search, fn($q) => $q->where(function($sub) use ($request) {
+                $sub->where('first_name', 'like', '%' . $request->search . '%')
+                    ->orWhere('last_name',  'like', '%' . $request->search . '%')
+                    ->orWhere('phone',       'like', '%' . $request->search . '%')
+                    ->orWhere('email',       'like', '%' . $request->search . '%');
+            }))
+            ->latest()
+            ->paginate(15, ['*'], 'wpage')
+            ->withQueryString();
 
-        return view('admin.users.index', compact('tab', 'customers', 'employees', 'roles'));
+        $roles = Role::whereIn('name', ['admin', 'super_admin', 'staff'])->get();
+
+        return view('admin.users.index', compact('tab', 'customers', 'employees', 'walkins', 'roles'));
     }
 
     // ── Customer actions ──────────────────────────────────────────────────────
@@ -55,11 +68,20 @@ class UserManagementController extends Controller
         return view('admin.users.show-customer', compact('user', 'bookings'));
     }
 
-    public function suspendCustomer(User $user)
+    public function suspendCustomer(Request $request, User $user)
     {
         abort_unless($user->hasRole('customer'), 404);
-        $user->update(['status' => 'suspended']);
-        ActivityLog::log("Customer #{$user->id} ({$user->email}) suspended", User::class, $user->id);
+        
+        $request->validate([
+            'suspension_reason' => ['required', 'string', 'max:1000']
+        ]);
+
+        $user->update([
+            'status' => 'suspended',
+            'suspension_reason' => $request->suspension_reason
+        ]);
+
+        ActivityLog::log("Customer #{$user->id} ({$user->email}) suspended. Reason: {$request->suspension_reason}", User::class, $user->id);
         return back()->with('success', "{$user->first_name} {$user->last_name} has been suspended.");
     }
 
@@ -74,7 +96,7 @@ class UserManagementController extends Controller
     // ── Employee actions ──────────────────────────────────────────────────────
     public function createEmployee()
     {
-        $roles = Role::whereIn('name', ['admin', 'super_admin'])->get();
+        $roles = Role::whereIn('name', ['admin', 'super_admin', 'staff'])->get();
         return view('admin.users.create-employee', compact('roles'));
     }
 
@@ -85,7 +107,7 @@ class UserManagementController extends Controller
             'last_name'  => ['required', 'string', 'max:80'],
             'email'      => ['required', 'email', 'unique:users,email'],
             'password'   => ['required', 'min:8', 'confirmed'],
-            'role'       => ['required', 'in:admin,super_admin'],
+            'role'       => ['required', 'in:admin,super_admin,staff'],
         ]);
 
         $employee = User::create([
@@ -111,20 +133,20 @@ class UserManagementController extends Controller
 
     public function editEmployee(User $user)
     {
-        abort_unless($user->hasAnyRole(['admin', 'super_admin']), 404);
-        $roles = Role::whereIn('name', ['admin', 'super_admin'])->get();
+        abort_unless($user->hasAnyRole(['admin', 'super_admin', 'staff']), 404);
+        $roles = Role::whereIn('name', ['admin', 'super_admin', 'staff'])->get();
         return view('admin.users.edit-employee', compact('user', 'roles'));
     }
 
     public function updateEmployee(Request $request, User $user)
     {
-        abort_unless($user->hasAnyRole(['admin', 'super_admin']), 404);
+        abort_unless($user->hasAnyRole(['admin', 'super_admin', 'staff']), 404);
 
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:80'],
             'last_name'  => ['required', 'string', 'max:80'],
             'email'      => ['required', 'email', 'unique:users,email,' . $user->id],
-            'role'       => ['required', 'in:admin,super_admin'],
+            'role'       => ['required', 'in:admin,super_admin,staff'],
             'password'   => ['nullable', 'min:8', 'confirmed'],
         ]);
 
@@ -148,7 +170,7 @@ class UserManagementController extends Controller
 
     public function deactivateEmployee(User $user)
     {
-        abort_unless($user->hasAnyRole(['admin', 'super_admin']), 404);
+        abort_unless($user->hasAnyRole(['admin', 'super_admin', 'staff']), 404);
         abort_if($user->id === Auth::id(), 403, 'You cannot deactivate yourself.');
 
         $user->update(['status' => 'inactive']);
@@ -159,7 +181,7 @@ class UserManagementController extends Controller
 
     public function reactivateEmployee(User $user)
     {
-        abort_unless($user->hasAnyRole(['admin', 'super_admin']), 404);
+        abort_unless($user->hasAnyRole(['admin', 'super_admin', 'staff']), 404);
 
         $user->update(['status' => 'active']);
         ActivityLog::log("Reactivated employee {$user->email}", User::class, $user->id);

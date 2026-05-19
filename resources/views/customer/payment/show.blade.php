@@ -20,8 +20,8 @@
     .form-label span.req{color:#ff8c3a}
     .form-control{width:100%;height:44px;background:var(--input-bg);border:1px solid var(--line);border-radius:10px;color:var(--text);font-family:inherit;font-size:.92rem;padding:0 13px;outline:none;transition:border-color .2s}
     .form-control:focus{border-color:var(--orange);box-shadow:0 0 0 3px var(--og)}
-    .upload-zone{border:2px dashed var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .2s}
-    .upload-zone:hover{border-color:var(--orange)}
+    .upload-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .2s}
+    .upload-zone:hover{border-color:var(--orange);background:rgba(255,107,0,.02)}
     .upload-zone input{display:none}
     .submit-btn{width:100%;height:50px;background:linear-gradient(135deg,#ff8c3a,#ff6b00);border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(255,107,0,.3);transition:filter .2s,transform .2s;margin-top:8px}
     .submit-btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
@@ -49,23 +49,50 @@
         </div>
     </div>
     @endif
-
     <div class="gcash-box">
         <div class="gcash-logo">GCash</div>
         <div class="gcash-num">0917 123 4567</div>
         <div class="gcash-name">OrangeCrush Car Rentals</div>
-        <div class="amount-chip">PHP {{ number_format($booking->total_amount, 0) }}</div>
-        <p style="font-size:.83rem;color:var(--text-dim)">Send the exact amount above, then fill the form below.</p>
+        <div class="amount-chip">BALANCE: PHP {{ number_format($booking->balance_amount, 2) }}</div>
+        <p style="font-size:.83rem;color:var(--text-dim)">You can pay in full or make a partial deposit to hold your reservation.</p>
     </div>
 
     <div class="info-card">
-        <h2>Booking Summary</h2>
-        <div class="detail-row"><span>Vehicle</span><strong>{{ $booking->vehicle->name }}</strong></div>
-        <div class="detail-row"><span>Pickup</span><strong>{{ $booking->pickup_date->format('M d, Y') }}</strong></div>
-        <div class="detail-row"><span>Return</span><strong>{{ $booking->return_date->format('M d, Y') }}</strong></div>
-        <div class="detail-row"><span>Duration</span><strong>{{ $booking->duration_in_days }} day(s)</strong></div>
-        <div class="detail-row"><span>Total</span><strong style="color:#ff8c3a">PHP {{ number_format($booking->total_amount, 0) }}</strong></div>
+        <h2>Payment Breakdown</h2>
+        <div class="detail-row"><span>Total Rental Fee</span><strong>PHP {{ number_format($booking->total_amount, 2) }}</strong></div>
+        <div class="detail-row"><span>Already Paid</span><strong style="color:var(--green)">- PHP {{ number_format($booking->paid_amount, 2) }}</strong></div>
+        <div class="detail-row" style="border-top:1px solid var(--line); margin-top:4px; padding-top:12px"><span>Remaining Balance</span><strong style="color:#ff8c3a; font-size:1.1rem">PHP {{ number_format($booking->balance_amount, 2) }}</strong></div>
     </div>
+
+    @if($booking->payments()->exists())
+    <div class="info-card" style="padding:0; overflow:hidden">
+        <div style="padding:22px 22px 10px"><h2>Recent Submissions</h2></div>
+        <div style="width:100%; overflow-x:auto">
+            <table style="width:100%; border-collapse:collapse; font-size:.85rem">
+                <thead>
+                    <tr style="text-align:left; background:rgba(255,255,255,.02); border-bottom:1px solid var(--line)">
+                        <th style="padding:12px 22px; color:var(--text-dim)">Date</th>
+                        <th style="padding:12px; color:var(--text-dim)">Amount</th>
+                        <th style="padding:12px 22px; color:var(--text-dim)">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($booking->payments()->latest()->get() as $p)
+                    <tr style="border-bottom:1px solid var(--line)">
+                        <td style="padding:12px 22px">{{ $p->created_at->format('M d, Y') }}</td>
+                        <td style="padding:12px; font-weight:700">₱{{ number_format($p->amount, 2) }}</td>
+                        <td style="padding:12px 22px">
+                            @if($p->status==='verified') <span style="color:var(--green)">Verified</span>
+                            @elseif($p->status==='rejected') <span style="color:var(--red)">Rejected</span>
+                            @else <span style="color:var(--orange-l)">Pending</span> @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
 
     <div class="info-card">
         <h2>Upload Proof of Payment</h2>
@@ -74,6 +101,12 @@
             @if($errors->any())
                 <div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:11px;color:#f87171;font-size:.88rem;margin-bottom:14px">{{ $errors->first() }}</div>
             @endif
+
+            <div class="form-group">
+                <label class="form-label">Amount You Are Sending (₱) <span class="req">*</span></label>
+                <input type="number" step="0.01" name="amount_submitted" class="form-control" placeholder="Max: {{ $booking->balance_amount }}" value="{{ old('amount_submitted', $booking->balance_amount) }}" required>
+                <p style="font-size:.75rem; color:var(--text-dim); margin-top:4px">Enter the exact amount you sent via GCash.</p>
+            </div>
 
             <div class="form-group">
                 <label class="form-label">GCash Reference Code <span class="req">*</span></label>
@@ -85,11 +118,6 @@
                     <span style="font-size:.72rem;color:var(--text-dim);text-transform:none;letter-spacing:0">(found on your GCash receipt)</span>
                 </label>
                 <input type="text" name="gcash_transaction_reference_number" class="form-control" placeholder="e.g. 1234 5678 9012" value="{{ old('gcash_transaction_reference_number') }}" required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Amount You Sent (₱) <span class="req">*</span></label>
-                <input type="number" step="0.01" name="amount_submitted" class="form-control" placeholder="{{ $booking->total_amount }}" value="{{ old('amount_submitted') }}" required>
             </div>
 
             <div class="form-group">
@@ -106,9 +134,9 @@
                 </label>
                 <img id="preview" src="" alt="Preview">
             </div>
-            <button type="submit" class="submit-btn" id="payBtn">Submit Payment →</button>
+            <button type="submit" class="submit-btn" id="payBtn">Submit Payment Proof →</button>
         </form>
-    </div>
+    </div>   </div>
 </div>
 @endsection
 @push('scripts')

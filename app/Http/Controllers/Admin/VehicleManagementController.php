@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
-use App\Models\Category;
+
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 
@@ -12,16 +12,14 @@ class VehicleManagementController extends Controller
 {
     public function index()
     {
-        $vehicles   = Vehicle::with('category')->latest()->paginate(15);
-        $categories = Category::orderBy('category_name')->get();
-        return view('admin.vehicles.index', compact('vehicles', 'categories'));
+        $vehicles = Vehicle::latest()->paginate(15);
+        return view('admin.vehicles.index', compact('vehicles'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name'          => ['required', 'string', 'max:100'],
-            'category_id'   => ['nullable', 'exists:categories,id'],
             'brand'         => ['nullable', 'string', 'max:60'],
             'model'         => ['nullable', 'string', 'max:60'],
             'year'          => ['nullable', 'integer', 'min:1990', 'max:2030'],
@@ -77,8 +75,9 @@ class VehicleManagementController extends Controller
 
     public function destroy(Vehicle $vehicle)
     {
-        ActivityLog::log("Vehicle deleted: {$vehicle->name}", Vehicle::class, $vehicle->id);
-        $vehicle->delete();
-        return back()->with('success', 'Vehicle deleted.');
+        $vehicle->update(['status' => 'unavailable']);
+        ActivityLog::log("Vehicle deactivated (marked unavailable): {$vehicle->name}", Vehicle::class, $vehicle->id);
+        
+        return back()->with('success', 'Vehicle has been marked as unavailable. Transaction records are preserved.');
     }
 }

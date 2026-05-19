@@ -23,70 +23,98 @@ class BookingController extends Controller
             return back()->with('error', 'This vehicle is no longer available.');
         }
 
-        $terms = TermsAndCondition::current();
-
-        // Near-conflict detection — warn if a booking ends within 2 days of the requested pickup
-        $nearConflict = null;
-        if ($request->pickup_date) {
-            $pickup = Carbon::parse($request->pickup_date);
-            $nearConflict = Booking::where('vehicle_id', $vehicle->id)
-                ->whereIn('status', ['confirmed', 'ongoing'])
-                ->whereBetween('return_date', [
-                    $pickup->copy()->subDays(2),
-                    $pickup->copy()->addDays(2),
-                ])
-                ->first();
+        // Redirect unverified users to the verification page before allowing booking
+        if (!Auth::user()->isVerified()) {
+            return redirect()->route('customer.verification.show')
+                ->with('warning', 'You must complete account verification before making a booking.');
         }
 
-        return view('customer.booking.create', compact('vehicle', 'terms', 'nearConflict'));
+        $terms = TermsAndCondition::current();
+
+        return view('customer.booking.create', compact('vehicle', 'terms'));
     }
 
     public function store(Request $request)
     {
+        // Double-check verification on submission (in case session state changed)
+        if (!Auth::user()->isVerified()) {
+            return redirect()->route('customer.verification.show')
+                ->with('warning', 'Account verification is required before completing a booking.');
+        }
+
         $validated = $request->validate([
             'vehicle_id'              => ['required', 'exists:vehicles,id'],
             'first_name'              => ['required', 'string', 'max:80'],
             'last_name'               => ['required', 'string', 'max:80'],
             'email'                   => ['required', 'email'],
             'phone'                   => ['required', 'string', 'max:20'],
-            'drivers_license_number'  => ['required', 'string', 'max:50'],
             'pickup_date'             => ['required', 'date', 'after_or_equal:today'],
             'return_date'             => ['required', 'date', 'after:pickup_date'],
             'terms_agreed'            => ['accepted'],
         ]);
 
-        $vehicle = Vehicle::findOrFail($validated['vehicle_id']);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $request) {
+            $vehicle = Vehicle::where('id', $validated['vehicle_id'])->lockForUpdate()->firstOrFail();
+            $user = Auth::user();
 
-        // Availability check — prevent double-booking
-        $pickup = Carbon::parse($validated['pickup_date']);
-        $return = Carbon::parse($validated['return_date']);
+            // Availability check — prevent double-booking
+            $pickup = Carbon::parse($validated['pickup_date']);
+            $return = Carbon::parse($validated['return_date']);
 
-        if (!Vehicle::isAvailableForDates($vehicle->id, $pickup, $return)) {
-            return back()->withErrors(['dates' => 'This vehicle is not available for your selected dates. Please choose different dates.'])->withInput();
-        }
+            if (!Vehicle::isAvailableForDates($vehicle->id, $pickup, $return)) {
+                return back()->withErrors(['dates' => 'This vehicle is not available for your selected dates. Please choose different dates.'])->withInput();
+            }
 
-        $days = $pickup->diffInDays($return) ?: 1;
+            $days = $pickup->diffInDays($return) ?: 1;
+            
+            // Smart Pricing Calculation
+            $smartPricing = new \App\Services\SmartPricingService();
+            $subtotal = $smartPricing->calculateFinalPrice($vehicle, $pickup, $return);
+            
+            // Handle Discount Code
+            $discountAmount = 0;
+            if ($request->filled('discount_code')) {
+                $discount = \App\Models\Discount::where('code', $request->discount_code)->first();
+                if ($discount && $discount->isValid()) {
+                    $discountAmount = $discount->calculateDiscount($subtotal);
+                    $discount->increment('times_used');
+                }
+            }
 
-        $booking = Booking::create([
-            'user_id'                => Auth::id(),
-            'vehicle_id'             => $vehicle->id,
-            'first_name'             => $validated['first_name'],
-            'last_name'              => $validated['last_name'],
-            'email'                  => $validated['email'],
-            'phone'                  => $validated['phone'],
-            'drivers_license_number' => $validated['drivers_license_number'],
-            'pickup_date'            => $validated['pickup_date'],
-            'return_date'            => $validated['return_date'],
-            'total_amount'           => $vehicle->price_per_day * $days,
-            'status'                 => Booking::STATUS_AWAITING_APPROVAL,
-            'terms_agreed_at'        => now(),
-            'hold_expires_at'        => null,
-        ]);
+            $totalAmount = $subtotal - $discountAmount;
 
-        ActivityLog::log("Booking created #{$booking->id}", Booking::class, $booking->id);
+            // New Business Logic: Auto-approve if verified
+            $isVerified = $user->isVerified();
+            $status = $isVerified ? Booking::STATUS_PENDING_PAYMENT : Booking::STATUS_AWAITING_APPROVAL;
+            $holdExpires = $isVerified ? now()->addHour() : null;
 
-        return redirect()->route('customer.tracking.index')
-            ->with('success', 'Booking submitted! Please wait for admin approval before making a payment.');
+            $booking = Booking::create([
+                'user_id'                => $user->id,
+                'vehicle_id'             => $vehicle->id,
+                'first_name'             => $validated['first_name'],
+                'last_name'              => $validated['last_name'],
+                'email'                  => $validated['email'],
+                'phone'                  => $validated['phone'],
+                'drivers_license_number' => $user->documents()->where('document_type', "Driver's License")->where('status', 'approved')->first()?->file_path ?? 'VERIFIED_USER',
+                'pickup_date'            => $validated['pickup_date'],
+                'return_date'            => $validated['return_date'],
+                'total_amount'           => $totalAmount,
+                'discount_amount'        => $discountAmount,
+                'security_deposit'       => 3000.00,
+                'security_deposit_status'=> 'pending',
+                'status'                 => $status,
+                'terms_agreed_at'        => now(),
+                'hold_expires_at'        => $holdExpires,
+            ]);
+
+            ActivityLog::log("Booking created #{$booking->id} (" . ($isVerified ? 'Auto-approved' : 'Awaiting verification') . ")", Booking::class, $booking->id);
+
+            $msg = $isVerified 
+                ? 'Booking confirmed! Please complete your payment within 1 hour to secure your reservation.' 
+                : 'Booking submitted! Please wait for admin approval (Verification required).';
+
+            return redirect()->route('customer.tracking.index')->with('success', $msg);
+        });
     }
 
     public function cancel(Booking $booking)

@@ -10,15 +10,27 @@
 </style>
 @endpush
 <div class="filter-tabs">
-    <a href="{{ route('admin.bookings.index') }}" class="filter-tab {{ !$status?'active':'' }}">All</a>
-    @foreach(['awaiting_approval','pending_payment','awaiting_verification','confirmed','ongoing','completed','rejected','cancelled'] as $s)
-    <a href="{{ route('admin.bookings.index',['status'=>$s]) }}" class="filter-tab {{ $status===$s?'active':'' }}">{{ ucwords(str_replace('_',' ',$s)) }}</a>
+    <a href="{{ route('admin.bookings.index') }}" class="filter-tab {{ !$status && !$type ? 'active' : '' }}">All Active</a>
+    
+    <div style="display:flex;gap:4px;margin-right:12px;padding-right:12px;border-right:1px solid var(--line)">
+        <a href="{{ route('admin.bookings.index', ['type' => 'online', 'status' => $status]) }}" class="filter-tab {{ $type === 'online' ? 'active' : '' }}">Online</a>
+        <a href="{{ route('admin.bookings.index', ['type' => 'walk-in', 'status' => $status]) }}" class="filter-tab {{ $type === 'walk-in' ? 'active' : '' }}">Walk-in</a>
+    </div>
+
+    @foreach(['awaiting_approval','pending_payment','awaiting_verification','confirmed','completed','rejected','cancelled'] as $s)
+    <a href="{{ route('admin.bookings.index',['status'=>$s, 'type' => $type]) }}" class="filter-tab {{ $status===$s?'active':'' }}">{{ ucwords(str_replace('_',' ',$s)) }}</a>
     @endforeach
 </div>
+<a href="{{ route('admin.rentals.index') }}" class="filter-tab" style="display:inline-flex;margin-bottom:16px;border-color:rgba(255,107,0,.3);color:var(--orange-l)">🚗 Ongoing Rentals →</a>
 <div class="card">
     <div class="card-header">
-        <span class="card-title">{{ $status ? ucwords(str_replace('_',' ',$status)) : 'All' }} Bookings</span>
-        <span style="font-size:.85rem;color:var(--text-dim)">{{ $bookings->total() }} total</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+            <div>
+                <span class="card-title">{{ $status ? ucwords(str_replace('_',' ',$status)) : 'All' }} Bookings</span>
+                <span style="font-size:.85rem;color:var(--text-dim)">{{ $bookings->total() }} total</span>
+            </div>
+            <a href="{{ route('admin.bookings.walk-in.create') }}" class="btn btn-primary btn-sm">+ Walk-in Booking</a>
+        </div>
     </div>
     <div class="tw">
         <table>
