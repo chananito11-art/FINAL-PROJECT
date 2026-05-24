@@ -43,6 +43,12 @@ storage/logs bootstrap/cache public/uploads \
 
 # Copy Laravel app
 COPY . .
+
+# Reapply permissions after copying
+RUN chown -R www-data:www-data storage bootstrap/cache public/uploads /tmp \
+&& chmod -R 775 storage bootstrap/cache public/uploads \
+&& chmod 1777 /tmp
+
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 # Install frontend dependencies and build assets
@@ -54,6 +60,11 @@ RUN php artisan config:clear \
 RUN php artisan storage:link || true
 # (Optional) Run migrations
 RUN php artisan migrate --force || true
+
+# Final permission fix
+RUN chown -R www-data:www-data storage bootstrap/cache public/uploads \
+&& chmod -R 775 storage bootstrap/cache public/uploads
+
 # Expose port
 EXPOSE 10000
 # Start Apache
