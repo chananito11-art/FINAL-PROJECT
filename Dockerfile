@@ -34,6 +34,13 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
+
+# Create storage directories early with correct permissions
+RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views \
+storage/logs bootstrap/cache public/uploads \
+&& chown -R www-data:www-data storage bootstrap/cache public/uploads \
+&& chmod -R 775 storage bootstrap/cache public/uploads
+
 # Copy Laravel app
 COPY . .
 # Install PHP dependencies
@@ -45,11 +52,6 @@ RUN php artisan config:clear \
 && php artisan view:clear
 # Create storage symlink
 RUN php artisan storage:link || true
-# Fix permissions
-RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views \
-storage/logs bootstrap/cache public/uploads \
-&& chown -R www-data:www-data storage bootstrap/cache public/uploads \
-&& chmod -R 775 storage bootstrap/cache public/uploads
 # (Optional) Run migrations
 RUN php artisan migrate --force || true
 # Expose port
