@@ -18,9 +18,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // ── Create Spatie roles ───────────────────────────────────────────────
-        $roleCustomer   = Role::create(['name' => 'customer']);
-        $roleAdmin      = Role::create(['name' => 'admin']);
-        $roleSuperAdmin = Role::create(['name' => 'super_admin']);
+        $roleCustomer   = Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+        $roleAdmin      = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $roleSuperAdmin = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
 
         // ── Seed users ────────────────────────────────────────────────────────
         $superAdmin = User::create([

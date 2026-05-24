@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Models\Vehicle;
+use Spatie\Permission\Models\Role;
 
 use App\Http\Controllers\AuthController;
 
@@ -60,9 +61,13 @@ Route::post('/email/verification-notification', function (\Illuminate\Http\Reque
 Route::get('/', function () {
     try {
         $vehicles = Vehicle::available()->orderBy('name')->take(6)->get();
+        $customersCount = Role::where([['name', 'customer'], ['guard_name', 'web']])->exists()
+            ? \App\Models\User::role('customer')->count()
+            : 0;
+
         $stats = [
             'vehicles' => Vehicle::count(),
-            'customers' => \App\Models\User::role('customer')->count(),
+            'customers' => $customersCount,
             'bookings' => \App\Models\Booking::count(),
             'revenue' => \App\Models\Payment::where('status', 'verified')->sum('amount'),
         ];
@@ -71,6 +76,7 @@ Route::get('/', function () {
     } catch (\Illuminate\Database\QueryException | \PDOException $exception) {
         return response()->view('errors.db-unavailable', [], 503);
     }
+
 });
 
 Route::get('/vehicles', [PublicVehicleController::class, 'index'])->name('vehicles.index');
