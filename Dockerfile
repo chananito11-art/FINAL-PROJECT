@@ -1,5 +1,10 @@
 FROM php:8.2-apache
 
+# Use the Laravel public folder as Apache document root
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri 's#/var/www/html#/var/www/html/public#g' /etc/apache2/sites-available/*.conf
+RUN a2enmod rewrite
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
@@ -39,7 +44,7 @@ RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framewor
 # (Optional) Run migrations if DB is available at build time
 RUN php artisan migrate --force || true
 
-EXPOSE 10000
+EXPOSE 80
 
 # Copy and enable entrypoint script to fix permissions at container start
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
