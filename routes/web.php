@@ -58,14 +58,19 @@ Route::post('/email/verification-notification', function (\Illuminate\Http\Reque
 
 // ─── Public Routes ────────────────────────────────────────────────────────────
 Route::get('/', function () {
-    $vehicles = Vehicle::available()->orderBy('name')->take(6)->get();
-    $stats = [
-        'vehicles' => Vehicle::count(),
-        'customers' => \App\Models\User::role('customer')->count(),
-        'bookings' => \App\Models\Booking::count(),
-        'revenue' => \App\Models\Payment::where('status', 'verified')->sum('amount'),
-    ];
-    return view('welcome', compact('vehicles', 'stats'));
+    try {
+        $vehicles = Vehicle::available()->orderBy('name')->take(6)->get();
+        $stats = [
+            'vehicles' => Vehicle::count(),
+            'customers' => \App\Models\User::role('customer')->count(),
+            'bookings' => \App\Models\Booking::count(),
+            'revenue' => \App\Models\Payment::where('status', 'verified')->sum('amount'),
+        ];
+
+        return view('welcome', compact('vehicles', 'stats'));
+    } catch (\Illuminate\Database\QueryException | \PDOException $exception) {
+        return response()->view('errors.db-unavailable', [], 503);
+    }
 });
 
 Route::get('/vehicles', [PublicVehicleController::class, 'index'])->name('vehicles.index');
