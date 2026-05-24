@@ -48,7 +48,6 @@ class VehicleManagementController extends Controller
     {
         $validated = $request->validate([
             'name'          => ['required', 'string', 'max:100'],
-            'category_id'   => ['nullable', 'exists:categories,id'],
             'brand'         => ['nullable', 'string', 'max:60'],
             'model'         => ['nullable', 'string', 'max:60'],
             'year'          => ['nullable', 'integer', 'min:1990', 'max:2030'],
