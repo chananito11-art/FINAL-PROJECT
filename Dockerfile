@@ -46,8 +46,8 @@ RUN php artisan config:clear \
 # Create storage symlink
 RUN php artisan storage:link || true
 # Fix permissions
-RUN mkdir -p storage/framework/cache storage/framework/sessions \
-storage/framework/views bootstrap/cache public/uploads \
+RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views \
+storage/logs bootstrap/cache public/uploads \
 && chown -R www-data:www-data storage bootstrap/cache public/uploads \
 && chmod -R 775 storage bootstrap/cache public/uploads
 # (Optional) Run migrations
