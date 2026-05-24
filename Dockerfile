@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.2-apache
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -6,51 +6,39 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libpng-dev \
-    libzip-dev
-
-# Install Node.js 20
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
+    libzip-dev \
+    nodejs \
+    npm
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-<<<<<<< HEAD
+
 # Set working directory
 WORKDIR /var/www/html
-# Copy Laravel app
+
+# Copy app and install dependencies
 COPY . .
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-# Install frontend dependencies and build assets
-RUN npm install && npm run build
-RUN php artisan config:clear \
-&& php artisan route:clear \
-&& php artisan view:clear
-# Create storage symlink
+
+RUN composer install --no-dev --optimize-autoloader --no-interaction || true
+
+# Install frontend dependencies and build assets (if package.json exists)
+RUN if [ -f package.json ]; then npm install && npm run build; fi || true
+
+# Clear caches and create storage symlink
+RUN php artisan config:clear && php artisan route:clear && php artisan view:clear || true
 RUN php artisan storage:link || true
-# Fix permissions
-RUN mkdir -p storage/framework/cache storage/framework/sessions \
-storage/framework/views bootstrap/cache public/uploads \
-&& chown -R www-data:www-data storage bootstrap/cache public/uploads \
-&& chmod -R 775 storage bootstrap/cache public/uploads
-# (Optional) Run migrations
+
+# Fix permissions for storage and cache so Apache can write logs and cached files
+RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache public/uploads \
+    && chown -R www-data:www-data storage bootstrap/cache public/uploads \
+    && chmod -R 775 storage bootstrap/cache public/uploads || true
+
+# (Optional) Run migrations if DB is available at build time
 RUN php artisan migrate --force || true
-# Expose port
+
 EXPOSE 10000
-# Start Apache
+
 CMD ["apache2-foreground"]
-=======
-
-WORKDIR /var/www
-
-COPY . .
-
-RUN composer install
-
-EXPOSE 10000
-
-CMD php artisan serve --host=0.0.0.0 --port=10000
->>>>>>> 3ad544b45b8112d991d224f4e7b4e80dc6b5fd6d
