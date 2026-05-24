@@ -1,67 +1,60 @@
-FROM php:8.2-apache
-
-# Use the Laravel public folder as Apache document root
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN a2enmod rewrite
-RUN printf '%s\n' \
-    '<VirtualHost *:80>' \
-    '    ServerName localhost' \
-    '    DocumentRoot /var/www/html/public' \
-    '    <Directory /var/www/html/public>' \
-    '        Options Indexes FollowSymLinks' \
-    '        AllowOverride All' \
-    '        Require all granted' \
-    '    </Directory>' \
-    '    DirectoryIndex index.php index.html' \
-    '    ErrorLog ${APACHE_LOG_DIR}/error.log' \
-    '    CustomLog ${APACHE_LOG_DIR}/access.log combined' \
-    '</VirtualHost>' \
-    > /etc/apache2/sites-available/000-default.conf
-
-# Install system dependencies
+FROM php:8.4-apache
+# Install system packages and PHP extensions
 RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    unzip \
-    libpng-dev \
-    libzip-dev \
-    nodejs \
-    npm
-
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql
-
+git \
+unzip \
+curl \
+libpq-dev \
+libzip-dev \
+libonig-dev \
+libxml2-dev \
+libpng-dev \
+zip \
+&& docker-php-ext-install pdo pdo_mysql pdo_pgsql zip mbstring xml \
+&& apt-get clean \
+&& rm -rf /var/lib/apt/lists/*
+# Enable Apache rewrite
+RUN a2enmod rewrite
+# Make Apache use port 10000 (Render default)
+RUN sed -i 's/Listen 80/Listen 10000/g' /etc/apache2/ports.conf \
+&& sed -i 's/<VirtualHost \*:80>/<VirtualHost *:10000>/g' /etc/apache2/sites-
+available/000-default.conf
+# Set Laravel public as document root
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-
+available/000-default.conf \
+&& sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/apache2.conf
+# Allow .htaccess for Laravel
+RUN printf '<Directory /var/www/html/public>\n\
+AllowOverride All\n\
+Require all granted\n\
+</Directory>\n' > /etc/apache2/conf-available/laravel.conf \
+&& a2enconf laravel
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+&& apt-get install -y nodejs
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
 # Set working directory
 WORKDIR /var/www/html
-
-# Copy app and install dependencies
+# Copy Laravel app
 COPY . .
-
-RUN composer install --no-dev --optimize-autoloader --no-interaction || true
-
-# Install frontend dependencies and build assets (if package.json exists)
-RUN if [ -f package.json ]; then npm install && npm run build; fi || true
-
-# Clear caches and create storage symlink
-RUN php artisan config:clear && php artisan route:clear && php artisan view:clear || true
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install frontend dependencies and build assets
+RUN npm install && npm run build
+RUN php artisan config:clear \
+&& php artisan route:clear \
+&& php artisan view:clear
+# Create storage symlink
 RUN php artisan storage:link || true
-
-# Fix permissions for storage and cache so Apache can write logs and cached files
-RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache public/uploads \
-    && chown -R www-data:www-data storage bootstrap/cache public/uploads \
-    && chmod -R 775 storage bootstrap/cache public/uploads || true
-
-# (Optional) Run migrations if DB is available at build time
+# Fix permissions
+RUN mkdir -p storage/framework/cache storage/framework/sessions \
+storage/framework/views bootstrap/cache public/uploads \
+&& chown -R www-data:www-data storage bootstrap/cache public/uploads \
+&& chmod -R 775 storage bootstrap/cache public/uploads
+# (Optional) Run migrations
 RUN php artisan migrate --force || true
-
-EXPOSE 80
-
-# Copy and enable entrypoint script to fix permissions at container start
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# Expose port
+EXPOSE 10000
+# Start Apache
 CMD ["apache2-foreground"]

@@ -23,6 +23,10 @@ Render deployment notes
 4. Post-deploy checks:
    - Verify logs (Render → Logs) for missing permission errors.
    - Ensure the site loads; if you see DB access denied, confirm DB credentials and that the DB allows connection from Render.
+   - If you see `SQLSTATE[HY000] [1045] Access denied`, that means the MySQL username/password or host is incorrect or the remote database is rejecting the connection.
+     - Confirm `DB_USERNAME` and `DB_PASSWORD` are exactly the values provided by your MySQL provider.
+     - Confirm `DB_HOST` and `DB_PORT` are correct.
+     - If using a managed database service, ensure it permits connections from Render or has the Render IP/range whitelisted.
 
 5. Notes:
    - The container includes an entrypoint script that fixes `storage` and `bootstrap/cache` permissions before starting Apache.

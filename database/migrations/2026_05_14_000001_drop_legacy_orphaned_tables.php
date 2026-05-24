@@ -12,8 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Disable FK checks so we can drop in any order safely
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        $driver = Schema::getConnection()->getDriverName();
+
+        // Disable FK checks so we can drop in any order safely on MySQL.
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        }
 
         // 1. Drop FK column on vehicles before dropping categories
         if (Schema::hasColumn('vehicles', 'category_id')) {
@@ -34,7 +38,9 @@ return new class extends Migration
         Schema::dropIfExists('retailcosts');           // Product model legacy table
         Schema::dropIfExists('categories');            // removed from vehicles above
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
     }
 
     /**
