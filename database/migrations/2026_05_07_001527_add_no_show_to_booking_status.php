@@ -9,30 +9,34 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE bookings MODIFY COLUMN status ENUM(
-            'awaiting_approval',
-            'pending_payment',
-            'awaiting_verification',
-            'confirmed',
-            'rejected',
-            'ongoing',
-            'completed',
-            'cancelled',
-            'no_show'
-        ) DEFAULT 'awaiting_approval'");
+        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE bookings MODIFY COLUMN status ENUM(
+                'awaiting_approval',
+                'pending_payment',
+                'awaiting_verification',
+                'confirmed',
+                'rejected',
+                'ongoing',
+                'completed',
+                'cancelled',
+                'no_show'
+            ) DEFAULT 'awaiting_approval'");
+        }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE bookings MODIFY COLUMN status ENUM(
-            'awaiting_approval',
-            'pending_payment',
-            'awaiting_verification',
-            'confirmed',
-            'rejected',
-            'ongoing',
-            'completed',
-            'cancelled'
-        ) DEFAULT 'awaiting_approval'");
+        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE bookings MODIFY COLUMN status ENUM(
+                'awaiting_approval',
+                'pending_payment',
+                'awaiting_verification',
+                'confirmed',
+                'rejected',
+                'ongoing',
+                'completed',
+                'cancelled'
+            ) DEFAULT 'awaiting_approval'");
+        }
     }
 };
