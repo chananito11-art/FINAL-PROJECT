@@ -2,8 +2,10 @@ FROM php:8.2-apache
 
 # Use the Laravel public folder as Apache document root
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri 's#/var/www/html#/var/www/html/public#g' /etc/apache2/sites-available/*.conf
+RUN sed -ri 's#/var/www/html#/var/www/html/public#g' /etc/apache2/sites-available/*.conf /etc/apache2/apache2.conf
 RUN a2enmod rewrite
+RUN printf '%s\n' '<Directory /var/www/html/public>' '    Options Indexes FollowSymLinks' '    AllowOverride All' '    Require all granted' '</Directory>' > /etc/apache2/conf-available/laravel.conf
+RUN a2enconf laravel
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
