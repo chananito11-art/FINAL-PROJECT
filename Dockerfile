@@ -41,4 +41,9 @@ RUN php artisan migrate --force || true
 
 EXPOSE 10000
 
+# Copy and enable entrypoint script to fix permissions at container start
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
