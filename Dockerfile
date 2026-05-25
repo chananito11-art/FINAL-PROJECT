@@ -50,8 +50,9 @@ RUN mkdir -p storage/framework/cache storage/framework/sessions \
 storage/framework/views bootstrap/cache public/uploads \
 && chown -R www-data:www-data storage bootstrap/cache public/uploads \
 && chmod -R 775 storage bootstrap/cache public/uploads
-# (Optional) Run migrations
-RUN php artisan migrate --force || true
+# Do not run migrations during image build; the database may not be available
+# until the container is started in the deployed environment.
+# Run migrations separately after deployment or use a release hook.
 # Expose port
 EXPOSE 10000
 # Start Apache
