@@ -6,18 +6,28 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 $basePath = dirname(__DIR__);
 $envPath = $basePath . '/.env';
-$databaseUrl = getenv('DATABASE_URL') ?: getenv('DB_URL');
+$databaseUrl = getenv('DATABASE_URL') ?: getenv('DB_URL') ?: getenv('MYSQL_URL') ?: getenv('CLEARDB_DATABASE_URL');
 
 if ($databaseUrl) {
     $parsed = parse_url($databaseUrl);
 
     if ($parsed !== false) {
         if (isset($parsed['scheme'])) {
-            $scheme = $parsed['scheme'];
-            if (!getenv('DB_CONNECTION')) {
-                putenv("DB_CONNECTION={$scheme}");
-                $_ENV['DB_CONNECTION'] = $scheme;
-                $_SERVER['DB_CONNECTION'] = $scheme;
+            $scheme = strtolower($parsed['scheme']);
+            $driverMap = [
+                'pgsql' => 'pgsql',
+                'postgres' => 'pgsql',
+                'postgresql' => 'pgsql',
+                'mysql' => 'mysql',
+                'mariadb' => 'mysql',
+                'sqlsrv' => 'sqlsrv',
+                'mssql' => 'sqlsrv',
+            ];
+
+            if (isset($driverMap[$scheme]) && !getenv('DB_CONNECTION')) {
+                putenv("DB_CONNECTION={$driverMap[$scheme]}");
+                $_ENV['DB_CONNECTION'] = $driverMap[$scheme];
+                $_SERVER['DB_CONNECTION'] = $driverMap[$scheme];
             }
         }
 
