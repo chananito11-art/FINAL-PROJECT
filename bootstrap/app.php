@@ -54,6 +54,25 @@ if ($databaseUrl) {
     }
 }
 
+if (empty(env('APP_KEY'))) {
+    $key = 'base64:' . base64_encode(random_bytes(32));
+    $envPath = base_path('.env');
+
+    if (file_exists($envPath) && is_writable($envPath)) {
+        $contents = file_get_contents($envPath);
+        if (preg_match('/^APP_KEY=.*$/m', $contents)) {
+            $contents = preg_replace('/^APP_KEY=.*$/m', "APP_KEY={$key}", $contents);
+        } else {
+            $contents = rtrim($contents, "\n") . "\nAPP_KEY={$key}\n";
+        }
+        file_put_contents($envPath, $contents);
+    }
+
+    putenv("APP_KEY={$key}");
+    $_ENV['APP_KEY'] = $key;
+    $_SERVER['APP_KEY'] = $key;
+}
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
