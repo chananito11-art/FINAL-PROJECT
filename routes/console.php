@@ -8,8 +8,20 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Artisan::command('env {action} {key?} {value?}', function (string $action, string $key = null, string $value = null) {
+Artisan::command('env {action} {key?} {value?} {--no-clear}', function (string $action, string $key = null, string $value = null) {
     $action = strtolower($action);
+    $clear = !$this->option('no-clear');
+
+    $refreshCache = function () use ($clear) {
+        if (!$clear) {
+            return;
+        }
+
+        $this->call('config:clear');
+        $this->call('cache:clear');
+        $this->call('route:clear');
+        $this->call('view:clear');
+    };
 
     switch ($action) {
         case 'get':
@@ -31,8 +43,12 @@ Artisan::command('env {action} {key?} {value?}', function (string $action, strin
                 return $this->error('Usage: php artisan env set KEY VALUE');
             }
 
-            env_set($key, $value);
+            if (!env_set($key, $value)) {
+                return $this->error("Unable to write {$key} to .env");
+            }
+
             $this->info("Set {$key}={$value}");
+            $refreshCache();
             break;
 
         case 'delete':
@@ -42,6 +58,7 @@ Artisan::command('env {action} {key?} {value?}', function (string $action, strin
 
             if (env_delete($key)) {
                 $this->info("Deleted {$key}");
+                $refreshCache();
             } else {
                 $this->warn("{$key} was not found");
             }
