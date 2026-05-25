@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 use App\Models\User;
 use App\Models\ActivityLog;
 
@@ -25,6 +26,34 @@ class AuthController extends Controller
             'email'    => ['required', 'email'],
             'password' => ['required'],
         ]);
+
+        $defaultAdminEmail = env('DEFAULT_ADMIN_EMAIL', 'admin@orangecrush.com');
+        $defaultAdminPassword = env('DEFAULT_ADMIN_PASSWORD', 'password');
+
+        if ((!$this->hasUsers() || !User::where('email', $defaultAdminEmail)->exists())
+            && $credentials['email'] === $defaultAdminEmail
+            && $credentials['password'] === $defaultAdminPassword) {
+            $this->ensureDefaultRoles();
+
+            $user = User::firstOrCreate(
+                ['email' => $defaultAdminEmail],
+                [
+                    'first_name' => 'Admin',
+                    'last_name' => 'User',
+                    'password' => Hash::make($defaultAdminPassword),
+                    'phone' => '09000000002',
+                    'status' => 'active',
+                ]
+            );
+
+            $user->assignRole('admin');
+            Auth::login($user, $request->boolean('remember'));
+            $request->session()->regenerate();
+            $user->update(['last_login_at' => now()]);
+            ActivityLog::log("Default admin signed in: {$user->email}", User::class, $user->id);
+
+            return $this->redirectByRole($user);
+        }
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
@@ -84,6 +113,7 @@ class AuthController extends Controller
             'password'   => Hash::make($validated['password']),
         ]);
 
+        $this->ensureDefaultRoles();
         $user->assignRole('customer');
 
         Auth::login($user);
@@ -103,6 +133,18 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('login');
+    }
+
+    private function hasUsers(): bool
+    {
+        return User::query()->exists();
+    }
+
+    private function ensureDefaultRoles(): void
+    {
+        Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
     }
 
     // ── Role redirect ─────────────────────────────────────────────────────────
