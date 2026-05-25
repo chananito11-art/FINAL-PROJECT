@@ -4,7 +4,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-$databaseUrl = env('DATABASE_URL', env('DB_URL'));
+$basePath = dirname(__DIR__);
+$envPath = $basePath . '/.env';
+$databaseUrl = getenv('DATABASE_URL') ?: getenv('DB_URL');
 
 if ($databaseUrl) {
     $parsed = parse_url($databaseUrl);
@@ -12,7 +14,7 @@ if ($databaseUrl) {
     if ($parsed !== false) {
         if (isset($parsed['scheme'])) {
             $scheme = $parsed['scheme'];
-            if (!env('DB_CONNECTION')) {
+            if (!getenv('DB_CONNECTION')) {
                 putenv("DB_CONNECTION={$scheme}");
                 $_ENV['DB_CONNECTION'] = $scheme;
                 $_SERVER['DB_CONNECTION'] = $scheme;
@@ -54,9 +56,8 @@ if ($databaseUrl) {
     }
 }
 
-if (empty(env('APP_KEY'))) {
+if (empty(getenv('APP_KEY'))) {
     $key = 'base64:' . base64_encode(random_bytes(32));
-    $envPath = base_path('.env');
 
     if (file_exists($envPath) && is_writable($envPath)) {
         $contents = file_get_contents($envPath);
