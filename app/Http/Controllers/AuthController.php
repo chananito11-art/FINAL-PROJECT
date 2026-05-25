@@ -59,6 +59,11 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
+            if ($user->getRoleNames()->isEmpty()) {
+                $this->ensureDefaultRoles();
+                $user->assignRole('customer');
+            }
+
             // Block suspended customers
             if ($user->hasRole('customer') && $user->status === 'suspended') {
                 $reason = $user->suspension_reason ? " Reason: {$user->suspension_reason}" : "";
