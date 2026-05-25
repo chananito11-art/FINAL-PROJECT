@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         $roleCustomer   = Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
         $roleAdmin      = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $roleSuperAdmin = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $roleStaff      = Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
 
         // ── Seed users ────────────────────────────────────────────────────────
         $superAdmin = User::create([
