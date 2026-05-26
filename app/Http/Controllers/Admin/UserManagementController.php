@@ -31,8 +31,13 @@ class UserManagementController extends Controller
             ->paginate(15, ['*'], 'cpage')
             ->withQueryString();
 
-        // Employees tab
-        $employees = User::role(['admin', 'super_admin', 'staff'])
+        // Employees tab — only include roles that exist to prevent RoleDoesNotExist errors
+        $employeeRoles = ['admin', 'super_admin'];
+        if (Role::where('name', 'staff')->where('guard_name', 'web')->exists()) {
+            $employeeRoles[] = 'staff';
+        }
+
+        $employees = User::role($employeeRoles)
             ->with('createdBy')
             ->when($request->search, fn($q) => $q->where(function ($sub) use ($request) {
                 $sub->where('first_name', 'like', '%' . $request->search . '%')
@@ -96,7 +101,11 @@ class UserManagementController extends Controller
     // ── Employee actions ──────────────────────────────────────────────────────
     public function createEmployee()
     {
-        $roles = Role::whereIn('name', ['admin', 'super_admin', 'staff'])->get();
+        $roleNames = ['admin', 'super_admin'];
+        if (Role::where('name', 'staff')->where('guard_name', 'web')->exists()) {
+            $roleNames[] = 'staff';
+        }
+        $roles = Role::whereIn('name', $roleNames)->get();
         return view('admin.users.create-employee', compact('roles'));
     }
 
@@ -134,7 +143,11 @@ class UserManagementController extends Controller
     public function editEmployee(User $user)
     {
         abort_unless($user->hasAnyRole(['admin', 'super_admin', 'staff']), 404);
-        $roles = Role::whereIn('name', ['admin', 'super_admin', 'staff'])->get();
+        $roleNames = ['admin', 'super_admin'];
+        if (Role::where('name', 'staff')->where('guard_name', 'web')->exists()) {
+            $roleNames[] = 'staff';
+        }
+        $roles = Role::whereIn('name', $roleNames)->get();
         return view('admin.users.edit-employee', compact('user', 'roles'));
     }
 
