@@ -49,7 +49,7 @@
 <div class="dash-wrap">
     <div class="dash-header">
         <h1>Welcome back, {{ auth()->user()->first_name }}!</h1>
-        <p>Manage your car rentals and view your booking status below.</p>
+        <p>view your booking status below.</p>
     </div>
 
     {{-- Verification Alert --}}
