@@ -162,6 +162,6 @@ class AuthController extends Controller
             return redirect()->intended(route('admin.dashboard'));
         }
         // customer
-        return redirect()->intended(route('vehicles.index'));
+        return redirect()->intended(route('customer.dashboard'));
     }
 }
